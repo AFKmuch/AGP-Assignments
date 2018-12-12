@@ -11,13 +11,9 @@ Model::Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	m_pD3DDevice = device;
 	m_pImmediateContext = deviceContext;
 
-	m_x = 0;
-	m_y = 0;
-	m_z = 0;
-	m_xAngle = 0;
-	m_yAngle = 0;
-	m_zAngle = 0;
-	m_scale = 1;
+	m_position = XMVectorSet(0, 0, 0, 0);
+	m_rotation = XMVectorSet(0, 0, 0, 0);
+	m_scale = XMVectorSet(1, 1, 1, 0);
 }
 
 
@@ -127,11 +123,11 @@ HRESULT Model::Draw(XMMATRIX * view, XMMATRIX * projection)
 {
 	XMMATRIX transpose;
 	XMMATRIX world;
-	world = XMMatrixScaling(m_scale, m_scale, m_scale);
-	world *= XMMatrixRotationX(XMConvertToRadians(m_xAngle));
-	world *= XMMatrixRotationY(XMConvertToRadians(m_yAngle));
-	world *= XMMatrixRotationZ(XMConvertToRadians(m_zAngle));
-	world *= XMMatrixTranslation(m_x, m_y, m_z);
+	world = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
+	world *= XMMatrixRotationX(XMConvertToRadians(m_rotation.x));
+	world *= XMMatrixRotationY(XMConvertToRadians(m_rotation.y));
+	world *= XMMatrixRotationZ(XMConvertToRadians(m_rotation.z));
+	world *= XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
 
 
 	m_model_cb_values.WorldViewProjection = world * (*view) * (*projection);
@@ -166,34 +162,35 @@ HRESULT Model::AddTexture(char * filename)
 
 void Model::LookAt(float posX, float posZ, float posY)
 {
-	float dx = posX - m_x;
-	float dz = posZ - m_z;
-	float dy = posY - m_y;
-	float xz = sqrt((m_x * m_x) + (m_z * m_z));
-	m_yAngle = (atan2(dx, dz) * (180 / XM_PI));
-	m_xAngle = (-atan2(dy,xz) * (180 / XM_PI));
-	if (m_xAngle > 89)
+	float dx = posX - m_position.x;
+	float dy = posY - m_position.y;
+	float dz = posZ - m_position.z;
+
+	float xz = sqrt((m_position.x * m_position.x) + (m_position.z * m_position.z));
+
+	float yAngle = (atan2(dx, dz) * (180 / XM_PI));
+	float xAngle = (-atan2(dy,xz) * (180 / XM_PI));
+
+	if (xAngle > 89)
 	{
-		m_xAngle = 89;
+		xAngle = 89;
 	}
-	else if (m_xAngle < -89)
+	else if (xAngle < -89)
 	{
-		m_xAngle = -89;
+		xAngle = -89;
 	}
+
+	m_rotation = XMVectorSet(xAngle, yAngle, 0, 0);
 }
 
 void Model::MoveForward(float distance)
 {
-	m_x += sin(m_yAngle * (XM_PI / 180)) * distance;
-	m_y += -sin(m_xAngle * (XM_PI / 180.0)) * distance;
-	m_z += cos(m_yAngle * (XM_PI / 180)) * distance;
+	m_position = XMVectorSet(sin(m_rotation.y * (XM_PI / 180)) * distance, -sin(m_rotation.x * (XM_PI / 180.0)) * distance, cos(m_rotation.y * (XM_PI / 180)) * distance, 0);
 }
 
 void Model::CalculateModelCentrePoint()
 {
-	m_bounding_sphere_centre_x = 0;
-	m_bounding_sphere_centre_y = 0;
-	m_bounding_sphere_centre_z = 0;
+	m_bounding_sphere_centre = XMVectorSet(0, 0, 0, 0);
 	float maxX = -D3D11_FLOAT32_MAX;;
 	float maxY = -D3D11_FLOAT32_MAX;;
 	float maxZ = -D3D11_FLOAT32_MAX;;
@@ -234,9 +231,7 @@ void Model::CalculateModelCentrePoint()
 	float distanceY = abs(minY) + abs(maxY);
 	float distanceZ = abs(minZ) + abs(maxZ);
 	   
-	m_bounding_sphere_centre_x = minX + (distanceX / 2);
-	m_bounding_sphere_centre_y = minY + (distanceY / 2);
-	m_bounding_sphere_centre_z = minZ + (distanceZ / 2);
+	XMVectorSet(minX + (distanceX / 2), minY + (distanceY / 2), minZ + (distanceZ / 2), 0);
 }
 
 void Model::CalculateBoundingSphereRadius()
@@ -244,9 +239,9 @@ void Model::CalculateBoundingSphereRadius()
 	float maxDistance = 0;
 	for (int i = 0; i < m_pObject->numverts; i++)
 	{
-		float x = m_pObject->vertices[i].Pos.x + m_bounding_sphere_centre_x;
-		float y = m_pObject->vertices[i].Pos.y + m_bounding_sphere_centre_y;
-		float z = m_pObject->vertices[i].Pos.z + m_bounding_sphere_centre_z;
+		float x = m_pObject->vertices[i].Pos.x + m_bounding_sphere_centre.x;
+		float y = m_pObject->vertices[i].Pos.y + m_bounding_sphere_centre.y;
+		float z = m_pObject->vertices[i].Pos.z + m_bounding_sphere_centre.z;
 		float distance = (pow(x, 2) + pow(y, 2) + pow(z, 2));
 		if (distance > maxDistance)
 		{
@@ -283,93 +278,92 @@ bool Model::CheckCollision(Model * model)
 
 float Model::getPosX()
 {
-	return m_x;
+	return m_position.x;
 }
 
 float Model::getPosY()
 {
-	return m_y;
+	return m_position.y;
 }
 
 float Model::getPosZ()
 {
-	return m_z;
+	return m_position.z;
 }
 
 float Model::getAngleX()
 {
-	return m_xAngle;
+	return m_rotation.x;
 }
 
 float Model::getAngleY()
 {
-	return m_yAngle;
+	return m_rotation.y;
 }
 
 float Model::getAngleZ()
 {
-	return m_zAngle;
+	return m_rotation.z;
 }
 
 float Model::getScale()
 {
-	return m_scale;
+	return 1;
 }
 
 XMVECTOR Model::GetBoundingSphereWorldSpacePosition()
 {
 	XMMATRIX world;
-	world =  XMMatrixScaling(m_scale, m_scale, m_scale);
-	world *= XMMatrixRotationX(XMConvertToRadians(m_xAngle));
-	world *= XMMatrixRotationY(XMConvertToRadians(m_yAngle));
-	world *= XMMatrixRotationZ(XMConvertToRadians(m_zAngle));
-	world *= XMMatrixTranslation(m_x, m_y, m_z);
+	world =  XMMatrixScaling(1, 1, 1);
+	world *= XMMatrixRotationX(XMConvertToRadians(m_rotation.x));
+	world *= XMMatrixRotationY(XMConvertToRadians(m_rotation.y));
+	world *= XMMatrixRotationZ(XMConvertToRadians(m_rotation.z));
+	world *= XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
 
 	XMVECTOR offset;
-	offset = XMVectorSet(m_bounding_sphere_centre_x, m_bounding_sphere_centre_y, m_bounding_sphere_centre_z, 0.0);
-	offset = XMVector3Transform(offset, world);
+	offset = XMVector3Transform(m_bounding_sphere_centre, world);
 
 	return offset;
 }
 
 float Model::GetBoundingSphereRadius()
 {
-	return m_bounding_sphere_radius * m_scale;
+	return m_bounding_sphere_radius * 1;
 }
 
 void Model::setPosX(float x)
 {
-	m_x = x;
+	m_position = XMVectorSet(x, m_position.y, m_position.z, 0);
 }
 
 void Model::setPosY(float y)
 {
-	m_y = y;
+	m_position = XMVectorSet(m_position.x, y, m_position.z, 0);
 }
 
 void Model::setPosZ(float z)
 {
-	m_z = z;
+	m_position = XMVectorSet(m_position.x, m_position.y, z, 0);
 }
 
 void Model::setAngleX(float x)
 {
-	m_xAngle = x;
+	m_rotation = XMVectorSet(x, m_rotation.y, m_rotation.z, 0);
 }
 
 void Model::setAngleY(float y)
 {
-	m_yAngle = y;
+	m_rotation = XMVectorSet(m_rotation.x, y, m_rotation.z, 0);
 }
 
 void Model::setAngleZ(float z)
 {
-	m_zAngle = z;
+	m_rotation = XMVectorSet(m_rotation.x, m_rotation.y, z, 0);
 }
 
 void Model::setScale(float scale)
 {
-	m_scale = scale;
+	m_scale = XMVectorSet(scale, scale, scale, 0);
 }
 
 void Model::setDirectionalLight(XMVECTOR direction, XMVECTOR color)
@@ -385,37 +379,37 @@ void Model::setAmbientLight(XMVECTOR color)
 
 void Model::changePosX(float x)
 {
-	m_x += x;
+	m_position = XMVectorSet(m_position.x + x, m_position.y, m_position.z, 0);
 }
 
 void Model::changePosY(float y)
 {
-	m_y += y;
+	m_position = XMVectorSet(m_position.x, m_position.y + y, m_position.z, 0);
 }
 
 void Model::changePosZ(float z)
 {
-	m_z += z;
+	m_position = XMVectorSet(m_position.x, m_position.y, m_position.z + z, 0);
 }
 
 void Model::changeAngleX(float x)
 {
-	m_xAngle += x;
+	m_rotation = XMVectorSet(m_rotation.x + x, m_rotation.y, m_rotation.z, 0);
 }
 
 void Model::changeAngleY(float y)
 {
-	m_yAngle += y;
+	m_rotation = XMVectorSet(m_rotation.x, m_rotation.y + y, m_rotation.z, 0);
 }
 
 void Model::changeAngleZ(float z)
 {
-	m_zAngle += z;
+	m_rotation = XMVectorSet(m_rotation.x, m_rotation.y, m_rotation.z + z, 0);
 }
 
 void Model::changeScale(float scale)
 {
-	m_scale += scale;
+	m_scale = XMVectorSet(m_scale.x + scale, m_scale.y + scale, m_scale.z + scale, 0);
 }
 
 
