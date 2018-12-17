@@ -13,12 +13,14 @@
 #include "text2D.h"
 #include "Input.h"
 #include "Physics.h"
+#include "Time.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 //	Global Variables
 //////////////////////////////////////////////////////////////////////////////////////
 HINSTANCE	g_hInst = NULL;
 HWND		g_hWnd = NULL;
+Time*		Time::s_instance = 0;
 D3D_DRIVER_TYPE         g_driverType = D3D_DRIVER_TYPE_NULL;
 D3D_FEATURE_LEVEL       g_featureLevel = D3D_FEATURE_LEVEL_11_0;
 ID3D11Device*           g_pD3DDevice = NULL;
@@ -105,7 +107,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	// Main message loop
 	MSG msg = { 0 };
-
+	Time::Instance()->Reset();
 	while (msg.message != WM_QUIT)
 	{
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -115,6 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		else
 		{
+			Time::Instance()->Tick();
 			RenderFrame();
 		}
 	}
@@ -393,13 +396,15 @@ void ShutdownD3D()
 HRESULT InitialiseGraphics()
 {
 	g_pEntityList = new std::vector<Entity*>();
-	g_pEntity0 = new Physics(g_pEntityList, 0.000001, true);
+	g_pEntity0 = new Physics(g_pEntityList, 0.01, true);
 	g_pEntityList->push_back(g_pEntity0);
 	g_pEntity0->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
-	g_pEntity1 = new Physics(g_pEntityList, 0.000001, true);
+	g_pEntity0->SetPosition(-5, 0, 50);
+	g_pEntity0->SetVelocity(0, 0.01, 0);
+	g_pEntity1 = new Physics(g_pEntityList, 0.01, true);
 	g_pEntityList->push_back(g_pEntity1);
 	g_pEntity1->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
-	g_pEntity1->SetPosition(15, NULL, 5);
+	g_pEntity1->SetPosition(5, 0, 50);
 
 	HRESULT hr = S_OK;
 

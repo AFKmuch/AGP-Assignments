@@ -4,7 +4,8 @@
 
 void Physics::LateUpdate()
 {
-	ChangeVelocity(NULL, m_gravity * m_weight, NULL);
+	ChangeVelocity(0, (m_gravity * m_weight) * Time::Instance()->DeltaTime(), 0);
+	
 	ChangePosition(m_velocity.x, m_velocity.y, m_velocity.z);
 }
 
@@ -25,11 +26,13 @@ Physics::~Physics()
 
 void Physics::Update()
 {
-
-	MoveForward(0.001f);
 	if (CheckCollision())
 	{
-		MoveForward(-0.001f);
+
+	}
+	if (GetPosition().y < -5)
+	{
+		SetVelocity(NULL, 0.01, NULL);
 	}
 	ChangeRotation(NULL, 0.01f, NULL);
 

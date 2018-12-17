@@ -1,10 +1,9 @@
 #pragma once
 #include "Entity.h"
-
 class Physics : public Entity
 {
 private:
-	const float m_gravity = -0.00981;
+	const float m_gravity = -0.981;
 protected:
 	float m_weight;
 	bool m_simulated;
