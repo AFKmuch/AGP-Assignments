@@ -78,33 +78,7 @@ void Entity::MoveForward(float distance)
 	m_position = XMVectorSet(m_position.x + posX, m_position.y + posY, m_position.z + posZ, 0);
 }
 
-bool Entity::CheckCollision()
-{
-	Entity* entity;
-	for (int i = 0; i < m_pEntityList->size(); i++)
-	{
-		entity = m_pEntityList->at(i);
-		if (entity == this)
-		{
-			return false;
-		}
-		XMVECTOR thisModelPos = m_pModel->GetBoundingSphereWorldSpacePosition(m_scale, m_position, m_rotation);
-		XMVECTOR thatModelPos = entity->GetModel()->GetBoundingSphereWorldSpacePosition(entity->GetScale(), entity->GetPosition(), entity->GetRotation());
-		XMVECTOR distanceVector = XMVectorSet(thatModelPos.x - thisModelPos.x, thatModelPos.y - thisModelPos.y, thatModelPos.z - thisModelPos.z, thatModelPos.w - thisModelPos.w);
-		float distance = (distanceVector.x * distanceVector.x) + (distanceVector.y * distanceVector.y) + (distanceVector.z * distanceVector.z);
 
-		distance = sqrt(distance);
-		if (distance > (m_pModel->GetBoundingSphereRadius(m_scale) + entity->GetModel()->GetBoundingSphereRadius(entity->GetScale())))
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-	return false;
-}
 
 XMVECTOR Entity::GetPosition()
 {

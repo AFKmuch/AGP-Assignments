@@ -3,7 +3,7 @@
 class Physics : public Entity
 {
 private:
-	const float m_gravity = -0.981;
+	const float m_gravity = -9.81;
 protected:
 	float m_weight;
 	bool m_simulated;
@@ -16,6 +16,7 @@ public:
 	~Physics();
 
 	void Update();
+	bool CheckCollision();
 
 	float GetWeight();
 	bool GetSimulated();

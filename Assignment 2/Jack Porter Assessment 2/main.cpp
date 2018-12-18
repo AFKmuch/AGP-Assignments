@@ -396,15 +396,15 @@ void ShutdownD3D()
 HRESULT InitialiseGraphics()
 {
 	g_pEntityList = new std::vector<Entity*>();
-	g_pEntity0 = new Physics(g_pEntityList, 0.01, true);
+	g_pEntity0 = new Physics(g_pEntityList, 1, true);
 	g_pEntityList->push_back(g_pEntity0);
-	g_pEntity0->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
-	g_pEntity0->SetPosition(-5, 0, 50);
-	g_pEntity0->SetVelocity(0, 0.01, 0);
-	g_pEntity1 = new Physics(g_pEntityList, 0.01, true);
+	g_pEntity0->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Player.obj", (char*)"assets/texture.bmp");
+	g_pEntity0->SetPosition(0, 15, 50);
+	g_pEntity0->SetVelocity(0, 1, 0);
+	g_pEntity1 = new Physics(g_pEntityList, 1, true);
 	g_pEntityList->push_back(g_pEntity1);
 	g_pEntity1->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
-	g_pEntity1->SetPosition(5, 0, 50);
+	g_pEntity1->SetPosition(0, 0, 50);
 
 	HRESULT hr = S_OK;
 
@@ -468,7 +468,8 @@ void RenderFrame(void)
 	g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	XMMATRIX projection, view;
 
-	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0), screenWidth / screenHeight, 1.0, 100.0);
+	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0), (screenWidth / screenHeight) , 1.0, 100.0);
+	
 	view = g_pCamera->GetViewMatrix();
 
 	for (int i = 0; i < g_pEntityList->size(); i++)

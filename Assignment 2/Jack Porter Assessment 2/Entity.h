@@ -24,7 +24,6 @@ public:
 	void LookAt(float posX, float posY, float posZ);
 	void MoveForward(float distance);
 
-	bool CheckCollision();
 
 	XMVECTOR GetPosition();
 	XMVECTOR GetRotation();
