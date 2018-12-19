@@ -5,18 +5,23 @@
 #define XM_NO_ALIGNMENT
 #include <xnamath.h>
 #include <math.h>
+#include "Player.h"
 
 class Camera
 {
 private:
-
+	Player* m_pPlayer;
 	XMVECTOR m_forward;
 	XMVECTOR m_camera_rotation;
 	XMVECTOR m_position;
 	XMVECTOR m_lookat;
 	XMVECTOR m_up;
 	XMVECTOR m_direction;
-
+	float m_followDistance;
+	float m_followHeight;
+	float m_followRotation;
+	bool  m_followCamera;
+	float m_lerpMultiplier = 2;
 public:
 
 	Camera();
@@ -30,7 +35,7 @@ public:
 	XMMATRIX GetViewMatrix();
 	XMVECTOR GetPosition();
 
-
-
+	void SetUpPlayerFollow(Player* playerPtr, float followDistance, float followHeight, float followRotation);
+	void Update();
 };
 

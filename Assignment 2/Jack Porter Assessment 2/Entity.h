@@ -26,6 +26,8 @@ public:
 
 
 	XMVECTOR GetPosition();
+	XMVECTOR GetForward();
+	XMVECTOR GetRight();
 	XMVECTOR GetRotation();
 	XMVECTOR GetScale();
 

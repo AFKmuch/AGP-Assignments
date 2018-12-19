@@ -14,6 +14,7 @@ Camera::Camera(float startX, float startY, float startZ, float startRot)
 
 	m_forward.x = sin(m_camera_rotation.y * (XM_PI / 180));
 	m_forward.z = cos(m_camera_rotation.y * (XM_PI / 180));
+	m_followCamera = false;
 }
 
 
@@ -73,5 +74,32 @@ XMMATRIX Camera::GetViewMatrix()
 XMVECTOR Camera::GetPosition()
 {
 	return m_position;
+}
+
+void Camera::SetUpPlayerFollow(Player * playerPtr, float followDistance, float followHeight, float followRotation)
+{
+	m_pPlayer = playerPtr;
+	m_followDistance = followDistance;
+	m_followHeight = followHeight;
+	m_followRotation = followRotation;
+	m_followCamera = true;
+}
+
+void Camera::Update()
+{
+	if (m_followCamera)
+	{
+		XMVECTOR targetPosition = XMVectorSet(m_pPlayer->GetPosition().x - (sin(m_camera_rotation.y * (XM_PI / 180)) * m_followDistance), m_pPlayer->GetPosition().y + m_followHeight, m_pPlayer->GetPosition().z - (cos(m_camera_rotation.y * (XM_PI / 180)) * m_followDistance), 0);
+		XMVECTOR targetRotation = XMVectorSet(m_followRotation, m_pPlayer->GetRotation().y, 0, 0);
+		m_position = XMVectorLerp(m_position, targetPosition, Time::Instance()->DeltaTime() * m_lerpMultiplier);
+		m_camera_rotation = XMVectorLerp(m_camera_rotation, targetRotation, Time::Instance()->DeltaTime() * m_lerpMultiplier);
+		m_camera_rotation = XMVectorSet(m_followRotation, m_pPlayer->GetRotation().y, 0, 0);
+		m_forward.x = sin(m_camera_rotation.y * (XM_PI / 180));
+		m_forward.z = cos(m_camera_rotation.y * (XM_PI / 180));
+		m_forward.y = sin(m_camera_rotation.x * (XM_PI / 180));
+
+	}
+
+
 }
 

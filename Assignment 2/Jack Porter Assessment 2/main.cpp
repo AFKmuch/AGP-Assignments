@@ -53,7 +53,7 @@ XMVECTOR g_directional_light_colour;
 XMVECTOR g_ambient_light_colour;
 
 std::vector<Entity*>* g_pEntityList;
-Physics* g_pEntity0;
+Player* g_pPlayer;
 Physics* g_pEntity1;
 
 Input* g_pInput;
@@ -278,7 +278,7 @@ HRESULT InitialiseD3D()
 		D3D_DRIVER_TYPE_WARP, // comment this out also to use reference device
 		D3D_DRIVER_TYPE_REFERENCE,
 	};
-	UINT numDriverTypes = ARRAYSIZE(driverTypes);
+	UINT numDriverTypes = _ARRAYSIZE(driverTypes); //Changed to _ARRAYSIZE to stop error appearing on home PC
 
 	D3D_FEATURE_LEVEL featureLevels[] =
 	{
@@ -286,7 +286,7 @@ HRESULT InitialiseD3D()
 		D3D_FEATURE_LEVEL_10_1,
 		D3D_FEATURE_LEVEL_10_0,
 	};
-	UINT numFeatureLevels = ARRAYSIZE(featureLevels);
+	UINT numFeatureLevels = _ARRAYSIZE(featureLevels); //Changed to _ARRAYSIZE to stop error appearing on home PC
 
 	DXGI_SWAP_CHAIN_DESC sd;
 	ZeroMemory(&sd, sizeof(sd));
@@ -396,11 +396,11 @@ void ShutdownD3D()
 HRESULT InitialiseGraphics()
 {
 	g_pEntityList = new std::vector<Entity*>();
-	g_pEntity0 = new Physics(g_pEntityList, 1, true);
-	g_pEntityList->push_back(g_pEntity0);
-	g_pEntity0->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Player.obj", (char*)"assets/texture.bmp");
-	g_pEntity0->SetPosition(0, 15, 50);
-	g_pEntity0->SetVelocity(0, 1, 0);
+	g_pPlayer = new Player(g_pEntityList, 1, true, g_pInput);
+	g_pEntityList->push_back(g_pPlayer);
+	g_pPlayer->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Player.obj", (char*)"assets/texture.bmp"); //PlayerTexture.bmp is cursed
+	g_pPlayer->SetPosition(0, 15, 50);
+	g_pPlayer->SetVelocity(0, 1, 0);
 	g_pEntity1 = new Physics(g_pEntityList, 1, true);
 	g_pEntityList->push_back(g_pEntity1);
 	g_pEntity1->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
@@ -423,6 +423,7 @@ HRESULT InitialiseGraphics()
 	}
 
 	g_pCamera = new Camera(0.0f, 0.0f, -0.5f, 0.0f);
+	g_pCamera->SetUpPlayerFollow(g_pPlayer, 50, 75, -45);
 
 	return S_OK;
 }
@@ -434,27 +435,11 @@ void RenderFrame(void)
 {
 	g_pInput->ReadInputStates();
 
-	if (g_pInput->KeyIsPressed(DIK_W))
-	{
-		g_pCamera->Forward(0.001f);
-	}
-	if (g_pInput->KeyIsPressed(DIK_S))
-	{
-		g_pCamera->Forward(-0.001f);
-	}
-	if (g_pInput->KeyIsPressed(DIK_A))
-	{
-		g_pCamera->Strafe(-0.001f);
-	}
-	if (g_pInput->KeyIsPressed(DIK_D))
-	{
-		g_pCamera->Strafe(0.001f);
-	}
+
 	if (g_pInput->KeyIsPressed(DIK_ESCAPE))
 	{
 		DestroyWindow(g_hWnd);
 	}
-	g_pCamera->Rotate(g_pInput->GetMouseDelta().x / 100, g_pInput->GetMouseDelta().y / 100);
 
 	// Clear the back buffer - choose a colour you like
 	g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, g_clear_colour);
@@ -468,7 +453,7 @@ void RenderFrame(void)
 	g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	XMMATRIX projection, view;
 
-	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0), (screenWidth / screenHeight) , 1.0, 100.0);
+	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0), (screenWidth / screenHeight) , 1.0, 1000.0);
 	
 	view = g_pCamera->GetViewMatrix();
 
@@ -478,7 +463,7 @@ void RenderFrame(void)
 		g_pEntityList->at(i)->UpdateLighting(g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
 		g_pEntityList->at(i)->Draw(&view, &projection);
 	}
-
+	g_pCamera->Update();
 	// Display what has just been rendered
 	g_pSwapChain->Present(0, 0);
 }

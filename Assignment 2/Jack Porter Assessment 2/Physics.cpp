@@ -4,13 +4,22 @@
 
 void Physics::LateUpdate()
 {
-	ChangeVelocity(0, (m_gravity * m_weight) * Time::Instance()->DeltaTime(), 0);
-	
+
+	if (GetPosition().y <= -5)
+	{
+		SetVelocity(GetVelocity().x, 0, GetVelocity().z);
+		SetPosition(GetPosition().x, -5, GetPosition().z);
+	}
+	else
+	{
+		ChangeVelocity(0, (m_gravity * m_weight) * Time::Instance()->DeltaTime(), 0);
+	}
 	ChangePosition(m_velocity.x* Time::Instance()->DeltaTime(), m_velocity.y* Time::Instance()->DeltaTime(), m_velocity.z* Time::Instance()->DeltaTime());
 }
 
 Physics::Physics()
 {
+	
 }
 
 Physics::Physics(std::vector<Entity*>* entityList, float weight, bool simulated) : Entity(entityList)
@@ -26,15 +35,7 @@ Physics::~Physics()
 
 void Physics::Update()
 {
-	if (CheckCollision())
-	{
-		SetVelocity(-GetVelocity().x, -GetVelocity().y, -GetVelocity().z);
-	}
-	if (GetPosition().y < -5)
-	{
-		SetVelocity(NULL, 10, NULL);
-	}
-	ChangeRotation(NULL, 0.01f, NULL);
+	ChangeRotation(0, 0.01f, 0);
 
 	LateUpdate();
 }
@@ -66,35 +67,8 @@ void Physics::SetSimulated(bool simulated)
 
 void Physics::SetVelocity(float x, float y, float z)
 {
-	float newX, newY, newZ;
-	if (x == NULL)
-	{
-		newX = m_velocity.x;
-	}
-	else
-	{
-		newX = x;
-	}
 
-	if (y == NULL)
-	{
-		newY = m_velocity.y;
-	}
-	else
-	{
-		newY = y;
-	}
-
-	if (z == NULL)
-	{
-		newZ = m_velocity.z;
-	}
-	else
-	{
-		newZ = z;
-	}
-
-	m_velocity = XMVectorSet(newX, newY, newZ, 0);
+	m_velocity = XMVectorSet(x, y, z, 0);
 }
 
 void Physics::ChangeWeight(float weight)

@@ -54,7 +54,7 @@ Text2D::Text2D(string filename, ID3D11Device* device, ID3D11DeviceContext* conte
 
 	};
 
-	hr = pD3DDevice->CreateInputLayout(iedesc, ARRAYSIZE(iedesc), VS->GetBufferPointer(), VS->GetBufferSize(), &pInputLayout);
+	hr = pD3DDevice->CreateInputLayout(iedesc, _ARRAYSIZE(iedesc), VS->GetBufferPointer(), VS->GetBufferSize(), &pInputLayout); //Changed to _ARRAYSIZE to stop error appearing on home PC
 	if(FAILED(hr)) exit(0);
 
 	// Load in the font texture from given filename

@@ -85,6 +85,19 @@ XMVECTOR Entity::GetPosition()
 	return m_position;
 }
 
+XMVECTOR Entity::GetForward()
+{
+	float x = sin(m_rotation.y * (XM_PI / 180));
+	float y = -sin(m_rotation.x * (XM_PI / 180.0));
+	float z = cos(m_rotation.y * (XM_PI / 180));
+	return XMVectorSet(x, y, z, 0);
+}
+
+XMVECTOR Entity::GetRight()
+{
+	return XMVector3Cross(XMVectorSet(0,1,0,0),GetForward());
+}
+
 XMVECTOR Entity::GetRotation()
 {
 	return m_rotation;
@@ -99,68 +112,13 @@ XMVECTOR Entity::GetScale()
 
 void Entity::SetPosition(float x, float y, float z)
 {
-	float newX, newY, newZ;
-	if (x == NULL)
-	{
-		newX = m_position.x;
-	}
-	else
-	{
-		newX = x;
-	}
 
-	if (y == NULL)
-	{
-		newY = m_position.y;
-	}
-	else
-	{
-		newY = y;
-	}
-
-	if (z == NULL)
-	{
-		newZ = m_position.z;
-	}
-	else
-	{
-		newZ = z;
-	}
-
-	m_position = XMVectorSet(newX, newY, newZ, 0);
+	m_position = XMVectorSet(x, y, z, 0);
 }
 
 void Entity::SetAngle(float x, float y, float z)
 {
-	float newX, newY, newZ;
-	if (x == NULL)
-	{
-		newX = m_rotation.x;
-	}
-	else
-	{
-		newX = x;
-	}
-
-	if (y == NULL)
-	{
-		newY = m_rotation.y;
-	}
-	else
-	{
-		newY = y;
-	}
-
-	if (z == NULL)
-	{
-		newZ = m_rotation.z;
-	}
-	else
-	{
-		newZ = z;
-	}
-
-	m_rotation = XMVectorSet(newX, newY, newZ, 0);
+	m_rotation = XMVectorSet(x, y, z, 0);
 }
 
 void Entity::SetScale(float scale)

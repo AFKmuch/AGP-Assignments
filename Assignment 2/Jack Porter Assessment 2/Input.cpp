@@ -149,3 +149,65 @@ XMFLOAT2 Input::GetMouseDelta()
 {
 	return XMFLOAT2((m_mouse_state.lX * m_sensitivity), ((-m_mouse_state.lY) * m_sensitivity));
 }
+
+XMFLOAT2 Input::GetMovementAxis()
+{
+	float x = 0, y = 0;
+	if (KeyIsPressed(DIK_W))
+	{
+		y = 1;
+	}
+	else if (KeyIsPressed(DIK_S))
+	{
+		y = -1;
+	}
+	else
+	{
+		y = 0;
+	}
+
+	if (KeyIsPressed(DIK_D))
+	{
+		x = 1;
+	}
+	else if (KeyIsPressed(DIK_A))
+	{
+		x = -1;
+	}
+	else
+	{
+		x = 0;
+	}
+    return XMFLOAT2(x,y);
+}
+
+XMFLOAT2 Input::GetRotationAxis()
+{
+	float x = 0, y = 0;
+	if (KeyIsPressed(DIK_UP))
+	{
+		y = 1;
+	}
+	else if (KeyIsPressed(DIK_DOWN))
+	{
+		y = -1;
+	}
+	else
+	{
+		y = 0;
+	}
+
+	if (KeyIsPressed(DIK_RIGHT))
+	{
+		x = 1;
+	}
+	else if (KeyIsPressed(DIK_LEFT))
+	{
+		x = -1;
+	}
+	else
+	{
+		x = 0;
+	}
+	return XMFLOAT2(x, y);
+}

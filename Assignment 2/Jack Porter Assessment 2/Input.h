@@ -30,5 +30,7 @@ public:
 	bool KeyIsPressed(unsigned char DI_keycode);
 	void updateScreenSize(int screenWidth, int screenHeight);
 	XMFLOAT2 GetMouseDelta();
+	XMFLOAT2 GetMovementAxis();
+	XMFLOAT2 GetRotationAxis();
 };
 

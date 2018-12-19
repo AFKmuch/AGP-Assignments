@@ -147,6 +147,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="objfilemodel.cpp" />
     <ClCompile Include="Physics.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="text2D.cpp" />
     <ClCompile Include="Time.cpp" />
   </ItemGroup>
@@ -185,6 +186,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="objfilemodel.h" />
     <ClInclude Include="Physics.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="text2D.h" />
     <ClInclude Include="Time.h" />
   </ItemGroup>
