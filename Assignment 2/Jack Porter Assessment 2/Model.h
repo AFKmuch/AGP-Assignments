@@ -33,6 +33,7 @@ public:
 	Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	~Model();
 	HRESULT LoadObjModel(char* filename);
+	HRESULT LoadShader(char* filename);
 	HRESULT Draw(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection);
 	HRESULT AddTexture(char* filename);
 

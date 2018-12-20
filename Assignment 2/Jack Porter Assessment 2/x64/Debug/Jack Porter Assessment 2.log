@@ -1,4 +1,4 @@
-﻿  Player.cpp
+﻿  main.cpp
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2662): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2663): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2664): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
@@ -29,4 +29,7 @@ c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2743)
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2754): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
 c:\users\porte\documents\github\agp-assignments\assignment 2\jack porter assessment 2\physics.h(6): warning C4305: 'initializing': truncation from 'double' to 'const float'
   c:\program files (x86)\windows kits\10\include\10.0.16299.0\um\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+c:\users\porte\documents\github\agp-assignments\assignment 2\jack porter assessment 2\main.cpp(92): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\porte\documents\github\agp-assignments\assignment 2\jack porter assessment 2\main.cpp(155): warning C4838: conversion from 'float' to 'LONG' requires a narrowing conversion
+c:\users\porte\documents\github\agp-assignments\assignment 2\jack porter assessment 2\main.cpp(155): warning C4244: 'initializing': conversion from 'float' to 'LONG', possible loss of data
   Jack Porter Assessment 2.vcxproj -> C:\Users\Porte\Documents\GitHub\AGP-Assignments\Assignment 2\Jack Porter Assessment 2\x64\Debug\Jack Porter Assessment 2.exe

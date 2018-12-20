@@ -104,13 +104,86 @@ HRESULT Model::LoadObjModel(char * filename)
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
-	hr = m_pD3DDevice->CreateInputLayout(iedesc, ARRAYSIZE(iedesc), VS->GetBufferPointer(), VS->GetBufferSize(), &m_pInputLayout);
+	hr = m_pD3DDevice->CreateInputLayout(iedesc, _ARRAYSIZE(iedesc), VS->GetBufferPointer(), VS->GetBufferSize(), &m_pInputLayout);
 	if (FAILED(hr))
 	{
 		return hr;
 	}
 
 	m_pImmediateContext->IASetInputLayout(m_pInputLayout);
+	return S_OK;
+}
+
+HRESULT Model::LoadShader(char * filename)
+{
+	HRESULT hr = S_OK;
+	// create constant buffer
+	D3D11_BUFFER_DESC constant_buffer_desc;
+	ZeroMemory(&constant_buffer_desc, sizeof(constant_buffer_desc));
+
+	constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+	constant_buffer_desc.ByteWidth = 112;
+	constant_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	hr = m_pD3DDevice->CreateBuffer(&constant_buffer_desc, NULL, &m_pConstantBuffer);
+	if (FAILED(hr))//Return an error code if failed
+	{
+		return hr;
+	}
+
+	//Load and compile the pixel and vertex shaders - use vs_5_0 to target DX11 hardware only
+
+	ID3DBlob *VS, *PS, *error;
+	hr = D3DX11CompileFromFile(filename, 0, 0, "VShader", "vs_4_0", 0, 0, 0, &VS, &error, 0);
+
+	if (error != 0)//Check for shader compilation error
+	{
+		OutputDebugStringA((char*)error->GetBufferPointer());
+		error->Release();
+		if (FAILED(hr))//Don't fail if error is just a warning
+		{
+			return hr;
+		}
+	}
+
+	hr = D3DX11CompileFromFile(filename, 0, 0, "PShader", "ps_4_0", 0, 0, 0, &PS, &error, 0);
+
+	if (error != 0)//Check for shader compilation error
+	{
+		OutputDebugStringA((char*)error->GetBufferPointer());
+		error->Release();
+		if (FAILED(hr))//Don't fail if error is just a warning
+		{
+			return hr;
+		}
+	}
+
+	//Create shader objects
+	hr = m_pD3DDevice->CreateVertexShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &m_pVShader);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	hr = m_pD3DDevice->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &m_pPShader);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	//Set the shader objects as active
+	m_pImmediateContext->VSSetShader(m_pVShader, 0, 0);
+	m_pImmediateContext->PSSetShader(m_pPShader, 0, 0);
+
+	//Create and set the input layout object
+	D3D11_INPUT_ELEMENT_DESC iedesc[] =
+	{
+		//Be very careful setting the correct dxgi format and D3D version
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
 	return S_OK;
 }
 

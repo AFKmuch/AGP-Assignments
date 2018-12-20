@@ -148,6 +148,7 @@
     <ClCompile Include="objfilemodel.cpp" />
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="SkyBox.cpp" />
     <ClCompile Include="text2D.cpp" />
     <ClCompile Include="Time.cpp" />
   </ItemGroup>
@@ -166,7 +167,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="shaders.hlsl">
+    <FxCompile Include="sky_shader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -187,6 +188,7 @@
     <ClInclude Include="objfilemodel.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="SkyBox.h" />
     <ClInclude Include="text2D.h" />
     <ClInclude Include="Time.h" />
   </ItemGroup>

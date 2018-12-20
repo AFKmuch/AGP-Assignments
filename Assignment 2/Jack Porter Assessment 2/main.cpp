@@ -14,6 +14,7 @@
 #include "Input.h"
 #include "Physics.h"
 #include "Time.h"
+#include "SkyBox.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 //	Global Variables
@@ -55,6 +56,7 @@ XMVECTOR g_ambient_light_colour;
 std::vector<Entity*>* g_pEntityList;
 Player* g_pPlayer;
 Physics* g_pEntity1;
+SkyBox* g_pSkyBox;
 
 Input* g_pInput;
 
@@ -405,7 +407,7 @@ HRESULT InitialiseGraphics()
 	g_pEntityList->push_back(g_pEntity1);
 	g_pEntity1->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
 	g_pEntity1->SetPosition(0, 0, 50);
-
+	
 	HRESULT hr = S_OK;
 
 	// create constant buffer
@@ -424,7 +426,8 @@ HRESULT InitialiseGraphics()
 
 	g_pCamera = new Camera(0.0f, 0.0f, -0.5f, 0.0f);
 	g_pCamera->SetUpPlayerFollow(g_pPlayer, 50, 75, -45);
-
+	g_pSkyBox = new SkyBox(g_pD3DDevice, g_pImmediateContext, g_pCamera);
+	g_pSkyBox->SetUp((char*)"assets/skybox02.dds");
 	return S_OK;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -434,8 +437,6 @@ HRESULT InitialiseGraphics()
 void RenderFrame(void)
 {
 	g_pInput->ReadInputStates();
-
-
 	if (g_pInput->KeyIsPressed(DIK_ESCAPE))
 	{
 		DestroyWindow(g_hWnd);
@@ -446,6 +447,8 @@ void RenderFrame(void)
 
 	g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+
+
 	g_directional_light_colour = XMVectorSet(0.9f, 0.9f, 0.9f, 0.0f); // 
 	g_ambient_light_colour = XMVectorSet(0.05f, 0.05f, 0.25f, 1.0f); // use a small value for ambient
 
@@ -455,7 +458,10 @@ void RenderFrame(void)
 
 	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0), (screenWidth / screenHeight) , 1.0, 1000.0);
 	
+	g_pCamera->Update();
+
 	view = g_pCamera->GetViewMatrix();
+	g_pSkyBox->Draw(&view, &projection);
 
 	for (int i = 0; i < g_pEntityList->size(); i++)
 	{
@@ -463,7 +469,8 @@ void RenderFrame(void)
 		g_pEntityList->at(i)->UpdateLighting(g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
 		g_pEntityList->at(i)->Draw(&view, &projection);
 	}
-	g_pCamera->Update();
+
+
 	// Display what has just been rendered
 	g_pSwapChain->Present(0, 0);
 }
