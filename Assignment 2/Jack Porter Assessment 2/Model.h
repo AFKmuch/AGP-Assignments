@@ -9,6 +9,8 @@ struct MODEL_CONSTANT_BUFFER
 	XMVECTOR ambient_light_colour; // 16
 }; // 112 bytes
 
+
+
 class Model
 {
 private:

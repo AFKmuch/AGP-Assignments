@@ -15,6 +15,7 @@
 #include "Physics.h"
 #include "Time.h"
 #include "SkyBox.h"
+#include "ParticleSystem.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 //	Global Variables
@@ -53,12 +54,13 @@ XMVECTOR g_directional_light_shines_from = XMVectorSet(0.5f, 1.0f, -1.0f, 0.0f);
 XMVECTOR g_directional_light_colour;
 XMVECTOR g_ambient_light_colour;
 
+SkyBox* g_pSkyBox;
+ParticleSystem* g_pParticleSystem;
+Input* g_pInput;
+
 std::vector<Entity*>* g_pEntityList;
 Player* g_pPlayer;
 Physics* g_pEntity1;
-SkyBox* g_pSkyBox;
-
-Input* g_pInput;
 
 // Rename for each tutorial – This will appear in the title bar of the window
 char		g_TutorialName[100] = "CGP600 AE2 Jack Porter\0";
@@ -398,7 +400,7 @@ void ShutdownD3D()
 HRESULT InitialiseGraphics()
 {
 	g_pEntityList = new std::vector<Entity*>();
-	g_pPlayer = new Player(g_pEntityList, 1, true, g_pInput);
+	g_pPlayer = new Player(g_pEntityList, 5, true, g_pInput);
 	g_pEntityList->push_back(g_pPlayer);
 	g_pPlayer->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Player.obj", (char*)"assets/texture.bmp"); //PlayerTexture.bmp is cursed
 	g_pPlayer->SetPosition(0, 15, 50);
@@ -428,6 +430,9 @@ HRESULT InitialiseGraphics()
 	g_pCamera->SetUpPlayerFollow(g_pPlayer, 50, 75, -45);
 	g_pSkyBox = new SkyBox(g_pD3DDevice, g_pImmediateContext, g_pCamera);
 	g_pSkyBox->SetUp((char*)"assets/skybox02.dds");
+
+	g_pParticleSystem = new ParticleSystem(g_pD3DDevice, g_pImmediateContext);
+	g_pParticleSystem->CreateParticle();
 	return S_OK;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -447,8 +452,6 @@ void RenderFrame(void)
 
 	g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-
-
 	g_directional_light_colour = XMVectorSet(0.9f, 0.9f, 0.9f, 0.0f); // 
 	g_ambient_light_colour = XMVectorSet(0.05f, 0.05f, 0.25f, 1.0f); // use a small value for ambient
 
@@ -462,6 +465,7 @@ void RenderFrame(void)
 
 	view = g_pCamera->GetViewMatrix();
 	g_pSkyBox->Draw(&view, &projection);
+	XMVECTOR* camPos = &g_pCamera->GetPosition();
 
 	for (int i = 0; i < g_pEntityList->size(); i++)
 	{
@@ -469,7 +473,7 @@ void RenderFrame(void)
 		g_pEntityList->at(i)->UpdateLighting(g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
 		g_pEntityList->at(i)->Draw(&view, &projection);
 	}
-
+	g_pParticleSystem->Draw(&view, &projection, camPos);
 
 	// Display what has just been rendered
 	g_pSwapChain->Present(0, 0);

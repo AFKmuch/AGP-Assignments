@@ -4,8 +4,7 @@
 
 void Physics::LateUpdate()
 {
-
-	if (GetPosition().y <= -5)
+	if (GetPosition().y <= -5 && GetVelocity().y <= 0)
 	{
 		SetVelocity(GetVelocity().x, 0, GetVelocity().z);
 		SetPosition(GetPosition().x, -5, GetPosition().z);
