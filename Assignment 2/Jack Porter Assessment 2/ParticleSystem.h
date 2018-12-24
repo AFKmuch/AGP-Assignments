@@ -7,7 +7,9 @@
 #define XM_NO_ALIGNMENT
 #include <xnamath.h>
 #include <math.h>
+#include <random>
 #include <list>
+#include "Time.h"
 
 struct PARTICLE_CONSTANT_BUFFER
 {
@@ -15,12 +17,20 @@ struct PARTICLE_CONSTANT_BUFFER
 	XMFLOAT4 color;
 }; // 80 bytes
 
+static enum PARTICLE_EFFECT_TYPE
+{
+	STREAM,
+	FOUNTAIN,
+	SNOW
+};
+
 struct Particle
 {
 	float gravity;
 	XMVECTOR position;
 	XMVECTOR velocity;
 	XMFLOAT4 color;
+	float scale;
 	float maxLife;
 	float currentLife;
 };
@@ -61,9 +71,7 @@ public:
 	HRESULT Draw(XMMATRIX* view, XMMATRIX* projection, XMVECTOR* cameraPosition);
 	HRESULT DrawOne(Particle* one, XMMATRIX* view, XMMATRIX* projection, XMVECTOR* cameraPosition);
 	HRESULT AddTexture(char* filename);
-
-
-
-
+	void LoadEffect(PARTICLE_EFFECT_TYPE type, XMVECTOR startPos, XMVECTOR forward);
+	
 };
 

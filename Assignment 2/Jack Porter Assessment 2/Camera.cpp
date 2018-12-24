@@ -1,7 +1,6 @@
 #include "Camera.h"
 
 
-
 Camera::Camera()
 {
 }
@@ -9,11 +8,11 @@ Camera::Camera()
 Camera::Camera(float startX, float startY, float startZ, float startRot)
 {
 	m_position = XMVectorSet(startX, startY, startZ, 0);
-	m_camera_rotation.y = startRot;
-	m_camera_rotation.x = 0;
+	m_cameraRotation.y = startRot;
+	m_cameraRotation.x = 0;
 
-	m_forward.x = sin(m_camera_rotation.y * (XM_PI / 180));
-	m_forward.z = cos(m_camera_rotation.y * (XM_PI / 180));
+	m_forward.x = sin(m_cameraRotation.y * (XM_PI / 180));
+	m_forward.z = cos(m_cameraRotation.y * (XM_PI / 180));
 	m_followCamera = false;
 }
 
@@ -24,19 +23,19 @@ Camera::~Camera()
 
 void Camera::Rotate(float horizontal, float vertical)
 {
-	m_camera_rotation.y += horizontal;
-	m_camera_rotation.x += vertical;
-	if (m_camera_rotation.x >= 89)
+	m_targetRotation.y += horizontal;
+	m_targetRotation.x += vertical;
+	if (m_targetRotation.x >= 89)
 	{
-		m_camera_rotation.x = 89;
+		m_targetRotation.x = 89;
 	}
-	if (m_camera_rotation.x <= -89)
+	if (m_targetRotation.x <= -89)
 	{
-		m_camera_rotation.x = -89;
+		m_targetRotation.x = -89;
 	}
-	m_forward.x = sin(m_camera_rotation.y * (XM_PI / 180));
-	m_forward.z = cos(m_camera_rotation.y * (XM_PI / 180));
-	m_forward.y = sin(m_camera_rotation.x * (XM_PI / 180));
+	m_forward.x = sin(m_cameraRotation.y * (XM_PI / 180));
+	m_forward.z = cos(m_cameraRotation.y * (XM_PI / 180));
+	m_forward.y = sin(m_cameraRotation.x * (XM_PI / 180));
 }
 
 void Camera::Forward(float distance)
@@ -76,6 +75,21 @@ XMVECTOR Camera::GetPosition()
 	return m_position;
 }
 
+XMVECTOR Camera::GetForward()
+{
+	return m_forward;
+}
+
+XMVECTOR Camera::GetRight()
+{
+	return XMVector3Cross(XMVectorSet(0, 1, 0, 0), GetForward());
+}
+
+XMVECTOR Camera::GetRotation()
+{
+	return m_cameraRotation;
+}
+
 void Camera::SetUpPlayerFollow(Player * playerPtr, float followDistance, float followHeight, float followRotation)
 {
 	m_pPlayer = playerPtr;
@@ -89,14 +103,14 @@ void Camera::Update()
 {
 	if (m_followCamera)
 	{
-		XMVECTOR targetPosition = XMVectorSet(m_pPlayer->GetPosition().x - (sin(m_camera_rotation.y * (XM_PI / 180)) * m_followDistance), m_pPlayer->GetPosition().y + m_followHeight, m_pPlayer->GetPosition().z - (cos(m_camera_rotation.y * (XM_PI / 180)) * m_followDistance), 0);
-		XMVECTOR targetRotation = XMVectorSet(m_followRotation, m_pPlayer->GetRotation().y, 0, 0);
+		XMVECTOR targetPosition = XMVectorSet(m_pPlayer->GetPosition().x - (sin(m_cameraRotation.y * (XM_PI / 180)) * m_followDistance), m_pPlayer->GetPosition().y + m_followHeight, m_pPlayer->GetPosition().z - (cos(m_cameraRotation.y * (XM_PI / 180)) * m_followDistance), 0);
+		XMVECTOR targetRotation = XMVectorSet(m_followRotation, m_targetRotation.y, 0, 0);
 		m_position = XMVectorLerp(m_position, targetPosition, Time::Instance()->DeltaTime() * m_lerpMultiplier);
-		m_camera_rotation = XMVectorLerp(m_camera_rotation, targetRotation, Time::Instance()->DeltaTime() * m_lerpMultiplier);
-		m_camera_rotation = XMVectorSet(m_followRotation, m_pPlayer->GetRotation().y, 0, 0);
-		m_forward.x = sin(m_camera_rotation.y * (XM_PI / 180));
-		m_forward.z = cos(m_camera_rotation.y * (XM_PI / 180));
-		m_forward.y = sin(m_camera_rotation.x * (XM_PI / 180));
+		m_cameraRotation = XMVectorLerp(m_cameraRotation, targetRotation, Time::Instance()->DeltaTime() * m_lerpMultiplier);
+		m_cameraRotation = XMVectorSet(m_followRotation, m_targetRotation.y, 0, 0);
+		m_forward.x = sin(m_cameraRotation.y * (XM_PI / 180));
+		m_forward.z = cos(m_cameraRotation.y * (XM_PI / 180));
+		m_forward.y = sin(m_cameraRotation.x * (XM_PI / 180));
 
 	}
 

@@ -29,8 +29,6 @@ void Entity::Update()
 
 void Entity::Draw(XMMATRIX* view, XMMATRIX* projection)
 {
-
-	//Draw
 	XMMATRIX world;
 	world = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
 	world *= XMMatrixRotationX(XMConvertToRadians(m_rotation.x));

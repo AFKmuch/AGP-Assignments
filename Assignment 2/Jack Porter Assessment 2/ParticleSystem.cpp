@@ -8,17 +8,16 @@ ParticleSystem::ParticleSystem(ID3D11Device* device, ID3D11DeviceContext* device
 {
 	m_pD3DDevice = device;
 	m_pImmediateContext = deviceContext;
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 5000; i++)
 	{
 		Particle* newParticle = new Particle;
 		newParticle->color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 		newParticle->gravity = 0;
 		newParticle->position = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 		newParticle->velocity = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-		m_free.push_back(newParticle); //continue from here
+		m_free.push_back(newParticle);
 	}
 }
-
 
 ParticleSystem::~ParticleSystem()
 {
@@ -165,13 +164,25 @@ HRESULT ParticleSystem::LoadShader()
 
 HRESULT ParticleSystem::Draw(XMMATRIX * view, XMMATRIX * projection, XMVECTOR* cameraPosition)
 {
-	Particle test;
-	test.color = XMFLOAT4(1.0f, 0.0f, 0.3f, 1.0f);
-	test.gravity = 1;
-	test.position = XMVectorSet(10.0f, 20.0f, 45.0f, 0.0f);
-	test.velocity = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	std::list<Particle*>::iterator it;
+	if (m_active.size() > 0)
+	{
+		for (int i = 0; i < m_active.size(); i++)
+		{
+			it = m_active.begin();
+			std::advance(it, i);
+			(*it)->currentLife -= Time::Instance()->DeltaTime();
+			(*it)->velocity = XMVectorSet((*it)->velocity.x, (*it)->velocity.y + ((*it)->gravity * Time::Instance()->DeltaTime()), (*it)->velocity.z, 0);
+			(*it)->position += ((*it)->velocity * Time::Instance()->DeltaTime());
+			DrawOne((*it), view, projection, cameraPosition);
+			if ((*it)->currentLife <= 0)
+			{
+				m_free.push_back((*it));
+				m_active.remove((*it));
+			}
+		}
+	}
 
-	DrawOne(&test, view, projection, cameraPosition);
 	return S_OK;
 }
 
@@ -185,11 +196,14 @@ HRESULT ParticleSystem::DrawOne(Particle * one, XMMATRIX * view, XMMATRIX * proj
 	//select which primitive type to use 
 	m_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	float yAngle = atan2((cameraPosition->x - one->position.x), (cameraPosition->z - one->position.z));
+	float xAngle = -atan2((cameraPosition->y - one->position.y), sqrt(pow((cameraPosition->x - one->position.x), 2) + pow((cameraPosition->z - one->position.z), 2)));
+		
 	PARTICLE_CONSTANT_BUFFER cBufferValues;
 	XMMATRIX world;
-	world = XMMatrixScaling(0.3f, 0.3f, 0.3f);
-	//world *= XMMatrixRotationX(XMConvertToRadians(rotation.x));
-	//world *= XMMatrixRotationY(XMConvertToRadians(rotation.y));
+	world = XMMatrixScaling(one->scale, one->scale, one->scale);
+	world *= XMMatrixRotationX(xAngle);
+	world *= XMMatrixRotationY(yAngle);
 	//world *= XMMatrixRotationZ(XMConvertToRadians(rotation.z));
 	world *= XMMatrixTranslation(one->position.x, one->position.y, one->position.z);
 
@@ -227,6 +241,134 @@ HRESULT ParticleSystem::AddTexture(char * filename)
 	D3DX11CreateShaderResourceViewFromFile(m_pD3DDevice, filename, NULL, NULL, &m_pTexture, NULL); // Create texture
 
 	return S_OK;
+}
+
+void ParticleSystem::LoadEffect(PARTICLE_EFFECT_TYPE type, XMVECTOR startPos, XMVECTOR forward)
+{
+	switch (type)
+	{
+	case STREAM:
+		for (int i = 0; i < 3; i++)
+		{
+			if (m_free.size() > 0)
+			{
+				//Set random RGB values
+				float r = (std::rand() % 2);
+				float g = (std::rand() % 2);
+				float b = (std::rand() % 2);
+				(*m_free.begin())->color = { r, g, b, 1.0f };
+
+				(*m_free.begin())->scale = 0.3f;
+
+				//set life and gravity
+				(*m_free.begin())->maxLife = 2.0f;
+				(*m_free.begin())->currentLife = (*m_free.begin())->maxLife;
+				(*m_free.begin())->gravity = 0.0f;
+
+				//set random offset velocities
+				float randomHorizontal = (std::rand() % 10) - 5;
+				float randomVertical = (std::rand() % 10) - 5;
+
+				//calculate right vector
+				XMVECTOR right = XMVector3Cross(XMVectorSet(0, 1, 0, 0), forward);
+
+				//set base velocity
+				(*m_free.begin())->velocity = -forward * 10;
+
+				//offset velocity based on random offsets and right vector
+				(*m_free.begin())->velocity = XMVectorSet((*m_free.begin())->velocity.x + (right.x * randomHorizontal), randomVertical, (*m_free.begin())->velocity.z + (right.z * randomHorizontal), 0);
+
+				//set start position
+				(*m_free.begin())->position = startPos;
+
+				//add to active list and remove from free list
+				m_active.push_back((*m_free.begin()));
+				m_free.remove((*m_free.begin()));
+			}
+		}
+		break;
+	case FOUNTAIN:
+		for (int i = 0; i < 3; i++)
+		{
+			if (m_free.size() > 0)
+			{
+				//Set random RGB values
+				float r = (std::rand() % 2);
+				float g = (std::rand() % 2);
+				float b = (std::rand() % 2);
+				(*m_free.begin())->color = { r, g, b, 1.0f };
+
+				(*m_free.begin())->scale = 0.3f;
+
+				//set life and gravity
+				(*m_free.begin())->maxLife = 4.0f;
+				(*m_free.begin())->currentLife = (*m_free.begin())->maxLife;
+				(*m_free.begin())->gravity = -9.81f;
+
+				//set random offset velocities
+				float randomX = (std::rand() % 5) - 2.5f;
+				float randomZ = (std::rand() % 5) - 2.5f;
+				float randomY = (std::rand() % 5) + 15;
+
+				//set base velocity
+				(*m_free.begin())->velocity = XMVectorSet(randomX, randomY, randomZ, 0);
+
+				//set start position
+				(*m_free.begin())->position = startPos;
+
+				//add to active list and remove from free list
+				m_active.push_back((*m_free.begin()));
+				m_free.remove((*m_free.begin()));
+			}
+		}
+		break;
+	case SNOW:
+		for (int i = 0; i < 5; i++)
+		{
+			if (m_free.size() > 0)
+			{
+				//Set white RGB values
+				(*m_free.begin())->color = { 1.0f, 1.0f, 1.0f, 0.5f };
+
+				(*m_free.begin())->scale = 0.15f;
+
+				//set life and gravity
+				(*m_free.begin())->maxLife = 10.0f;
+				(*m_free.begin())->currentLife = (*m_free.begin())->maxLife;
+				(*m_free.begin())->gravity = 0;
+
+				//set random offset velocities
+				float randomHorizontal = (std::rand() % 8) - 4;
+				float randomVertical = (std::rand() % 3) - 3;
+
+				//calculate right vector
+				XMVECTOR right = XMVector3Cross(XMVectorSet(0, 1, 0, 0), forward);
+
+				//set base velocity
+				(*m_free.begin())->velocity = forward * 0;
+
+				//offset velocity based on random offsets and right vector
+				(*m_free.begin())->velocity = XMVectorSet((*m_free.begin())->velocity.x + (right.x * randomHorizontal), randomVertical, (*m_free.begin())->velocity.z + (right.z * randomHorizontal), 0);
+
+				//set start position
+				randomHorizontal = (std::rand() % 100) - 50;
+				randomVertical = (std::rand() % 10) - 5;
+				float randomForward = (std::rand() % 100) - 50;
+				(*m_free.begin())->position = startPos;
+				float x = (*m_free.begin())->position.x + (right.x * randomHorizontal) + (forward.x * randomForward);
+				float y = (*m_free.begin())->position.y + randomVertical;
+				float z = (*m_free.begin())->position.z + (right.z * randomHorizontal) + (forward.z * randomForward);
+				(*m_free.begin())->position = XMVectorSet(x,y,z, 0);
+
+				//add to active list and remove from free list
+				m_active.push_back((*m_free.begin()));
+				m_free.remove((*m_free.begin()));
+			}
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 

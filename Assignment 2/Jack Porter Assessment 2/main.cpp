@@ -62,6 +62,8 @@ std::vector<Entity*>* g_pEntityList;
 Player* g_pPlayer;
 Physics* g_pEntity1;
 
+
+bool g_snow = false;
 // Rename for each tutorial – This will appear in the title bar of the window
 char		g_TutorialName[100] = "CGP600 AE2 Jack Porter\0";
 
@@ -399,8 +401,11 @@ void ShutdownD3D()
 /////////////////////////////////////////////////////////////////////////////////////////////
 HRESULT InitialiseGraphics()
 {
+	g_pCamera = new Camera(0.0f, 0.0f, -0.5f, 0.0f);
+
 	g_pEntityList = new std::vector<Entity*>();
-	g_pPlayer = new Player(g_pEntityList, 5, true, g_pInput);
+	g_pPlayer = new Player(g_pEntityList, 5, true, g_pInput, g_pCamera);
+	g_pCamera->SetUpPlayerFollow(g_pPlayer, 50, 75, -45);
 	g_pEntityList->push_back(g_pPlayer);
 	g_pPlayer->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Player.obj", (char*)"assets/texture.bmp"); //PlayerTexture.bmp is cursed
 	g_pPlayer->SetPosition(0, 15, 50);
@@ -425,9 +430,6 @@ HRESULT InitialiseGraphics()
 	{
 		return hr;
 	}
-
-	g_pCamera = new Camera(0.0f, 0.0f, -0.5f, 0.0f);
-	g_pCamera->SetUpPlayerFollow(g_pPlayer, 50, 75, -45);
 	g_pSkyBox = new SkyBox(g_pD3DDevice, g_pImmediateContext, g_pCamera);
 	g_pSkyBox->SetUp((char*)"assets/skybox02.dds");
 
@@ -446,7 +448,22 @@ void RenderFrame(void)
 	{
 		DestroyWindow(g_hWnd);
 	}
-
+	if (g_pInput->KeyIsPressed(DIK_P))
+	{
+		g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::STREAM, g_pPlayer->GetPosition(), g_pPlayer->GetForward());
+	}
+	if (g_pInput->KeyIsPressed(DIK_O))
+	{
+		g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::FOUNTAIN, XMVectorZero(), XMVectorZero());
+	}
+	if (g_pInput->KeyIsPressed(DIK_I))
+	{
+		g_snow = !g_snow;
+	}
+	if (g_snow)
+	{
+		g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::SNOW, g_pCamera->GetPosition(), g_pCamera->GetForward());
+	}
 	// Clear the back buffer - choose a colour you like
 	g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, g_clear_colour);
 

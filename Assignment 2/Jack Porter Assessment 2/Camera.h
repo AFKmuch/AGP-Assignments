@@ -12,7 +12,8 @@ class Camera
 private:
 	Player* m_pPlayer;
 	XMVECTOR m_forward;
-	XMVECTOR m_camera_rotation;
+	XMVECTOR m_cameraRotation;
+	XMVECTOR m_targetRotation;
 	XMVECTOR m_position;
 	XMVECTOR m_lookat;
 	XMVECTOR m_up;
@@ -34,8 +35,10 @@ public:
 	void Up(float distance);
 	XMMATRIX GetViewMatrix();
 	XMVECTOR GetPosition();
+	XMVECTOR GetForward();
+	XMVECTOR GetRight();
+	XMVECTOR GetRotation();
 
 	void SetUpPlayerFollow(Player* playerPtr, float followDistance, float followHeight, float followRotation);
 	void Update();
 };
-
