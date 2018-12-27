@@ -9,10 +9,13 @@
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <xnamath.h>
+
+#include "ModelManager.h"
 #include "Camera.h"
 #include "text2D.h"
 #include "Input.h"
 #include "Physics.h"
+#include "Player.h"
 #include "Time.h"
 #include "SkyBox.h"
 #include "ParticleSystem.h"
@@ -401,6 +404,8 @@ void ShutdownD3D()
 /////////////////////////////////////////////////////////////////////////////////////////////
 HRESULT InitialiseGraphics()
 {
+	ModelManager::Instance()->SetUpDevice(g_pD3DDevice, g_pImmediateContext);
+
 	g_pCamera = new Camera(0.0f, 0.0f, -0.5f, 0.0f);
 
 	g_pEntityList = new std::vector<Entity*>();

@@ -1,7 +1,5 @@
 #include "Time.h"
 
-
-
 Time::Time() : m_secondsPerCount(0.0), m_deltaTime(-1.0), m_baseTime(0), m_pausedTime(0), m_previousTime(0), m_currentTime(0), m_stopped(0)
 {
 	__int64 countsPerSecond;
