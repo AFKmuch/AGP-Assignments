@@ -1,11 +1,14 @@
 #pragma once
 #include <d3d11.h>
+#include <d3dx11.h>
+#include <dxerr.h>
 // defines allows more compatible code, precede all xnamath includes with these defines
 #define _XM_NO_INTRINSICS_
 #define XM_NO_ALIGNMENT
 #include <xnamath.h>
 #include <math.h>
-#include "Player.h"
+
+class Player;
 
 class Camera
 {
@@ -23,8 +26,8 @@ private:
 	float m_followRotation;
 	bool  m_followCamera;
 	float m_lerpMultiplier = 2;
-public:
 
+public:
 	Camera();
 	Camera(float startX, float startY, float startZ, float startRot);
 	~Camera();

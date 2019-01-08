@@ -1,4 +1,4 @@
-﻿  ModelManager.cpp
+﻿  Physics.cpp
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2662): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2663): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2664): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
@@ -27,4 +27,5 @@ c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2732)
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2742): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2743): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
 c:\program files (x86)\microsoft directx sdk (june 2010)\include\xnamath.h(2754): warning C4838: conversion from 'unsigned int' to 'INT' requires a narrowing conversion
-  Jack Porter Assessment 2.vcxproj -> C:\Users\Porte\Documents\GitHub\AGP-Assignments\Assignment 2\Jack Porter Assessment 2\x64\Debug\Jack Porter Assessment 2.exe
+f:\github\agp-assignments\assignment 2\jack porter assessment 2\physics.h(8): warning C4305: 'initializing': truncation from 'double' to 'const float'
+  Jack Porter Assessment 2.vcxproj -> F:\GitHub\AGP-Assignments\Assignment 2\Jack Porter Assessment 2\x64\Debug\Jack Porter Assessment 2.exe

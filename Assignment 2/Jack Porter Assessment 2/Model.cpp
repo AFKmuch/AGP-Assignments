@@ -1,17 +1,15 @@
 #include "Model.h"
 
-
-
 Model::Model()
 {
 }
 
-Model::Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
+Model::Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMVECTOR directionVector, XMVECTOR directionColor, XMVECTOR ambientColor)
 {
 	m_pD3DDevice = device;
 	m_pImmediateContext = deviceContext;
-
-
+	setDirectionalLight(directionVector, directionColor);
+	setAmbientLight(ambientColor);
 }
 
 
@@ -24,7 +22,6 @@ Model::~Model()
 	if (m_pInputLayout) m_pInputLayout->Release();
 	if (m_pVShader) m_pVShader->Release();
 	if (m_pPShader) m_pPShader->Release();
-
 }
 
 HRESULT Model::LoadObjModel(char * filename)
@@ -122,8 +119,10 @@ HRESULT Model::Draw(XMMATRIX* world, XMMATRIX * view, XMMATRIX * projection)
 	XMMATRIX transpose;
 	transpose = XMMatrixTranspose((*world));
 	m_model_cb_values.WorldViewProjection = (*world) * (*view) * (*projection);
-	m_model_cb_values.directional_light_vector = XMVector3Transform(m_model_cb_values.directional_light_vector, transpose);
+	m_model_cb_values.directional_light_vector = XMVector3Transform(m_directional_light_vector, transpose);
 	m_model_cb_values.directional_light_vector = XMVector3Normalize(m_model_cb_values.directional_light_vector);
+	m_model_cb_values.directional_light_colour = m_directional_light_colour;
+	m_model_cb_values.ambient_light_colour = m_ambient_light_colour;
 	m_pImmediateContext->UpdateSubresource(m_pConstantBuffer, 0, 0, &m_model_cb_values, 0, 0);
 	m_pImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
 	m_pImmediateContext->VSSetShader(m_pVShader, 0, 0);
@@ -151,6 +150,11 @@ HRESULT Model::AddTexture(char * filename)
 	D3DX11CreateShaderResourceViewFromFile(m_pD3DDevice, filename, NULL, NULL, &m_pTexture, NULL); // Create texture
 
 	return S_OK;
+}
+
+void Model::Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection)
+{
+	Draw(world, view, projection);
 }
 
 void Model::CalculateModelCentrePoint()
@@ -252,13 +256,23 @@ float Model::GetBoundingSphereRadius(XMVECTOR scale)
 
 void Model::setDirectionalLight(XMVECTOR direction, XMVECTOR color)
 {
-	m_model_cb_values.directional_light_vector = direction;
-	m_model_cb_values.directional_light_colour = color;
+	m_directional_light_vector = direction;
+	m_directional_light_colour = color;
 }
 
 void Model::setAmbientLight(XMVECTOR color)
 {
-	m_model_cb_values.ambient_light_colour = color;
+	m_ambient_light_colour = color;
+}
+
+void Model::SetUpModel(char * modelFileName, char * textureFileName)
+{
+	//Add Model
+	LoadObjModel(modelFileName);
+	AddTexture(textureFileName);
+
+	CalculateModelCentrePoint();
+	CalculateBoundingSphereRadius();
 }
 
 

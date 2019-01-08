@@ -1,5 +1,5 @@
 #include "Camera.h"
-
+#include "Player.h"
 
 Camera::Camera()
 {
@@ -103,7 +103,7 @@ void Camera::Update()
 {
 	if (m_followCamera)
 	{
-		XMVECTOR targetPosition = XMVectorSet(m_pPlayer->GetPosition().x - (sin(m_cameraRotation.y * (XM_PI / 180)) * m_followDistance), m_pPlayer->GetPosition().y + m_followHeight, m_pPlayer->GetPosition().z - (cos(m_cameraRotation.y * (XM_PI / 180)) * m_followDistance), 0);
+		XMVECTOR targetPosition = XMVectorSet(m_pPlayer->GetParent()->GetPosition().x - (sin(m_cameraRotation.y * (XM_PI / 180)) * m_followDistance), m_pPlayer->GetParent()->GetPosition().y + m_followHeight, m_pPlayer->GetParent()->GetPosition().z - (cos(m_cameraRotation.y * (XM_PI / 180)) * m_followDistance), 0);
 		XMVECTOR targetRotation = XMVectorSet(m_followRotation, m_targetRotation.y, 0, 0);
 		m_position = XMVectorLerp(m_position, targetPosition, Time::Instance()->DeltaTime() * m_lerpMultiplier);
 		m_cameraRotation = XMVectorLerp(m_cameraRotation, targetRotation, Time::Instance()->DeltaTime() * m_lerpMultiplier);

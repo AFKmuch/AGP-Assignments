@@ -1,5 +1,6 @@
 #pragma once
 #include "Camera.h"
+
 struct SKYBOX_CONSTANT_BUFFER
 {
 	XMMATRIX WorldViewProjection; // 64 Bytes

@@ -11,6 +11,7 @@
 #include <xnamath.h>
 
 #include "ModelManager.h"
+#include "Model.h"
 #include "Camera.h"
 #include "text2D.h"
 #include "Input.h"
@@ -19,6 +20,7 @@
 #include "Time.h"
 #include "SkyBox.h"
 #include "ParticleSystem.h"
+#include "GameObject.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 //	Global Variables
@@ -61,9 +63,7 @@ SkyBox* g_pSkyBox;
 ParticleSystem* g_pParticleSystem;
 Input* g_pInput;
 
-std::vector<Entity*>* g_pEntityList;
-Player* g_pPlayer;
-Physics* g_pEntity1;
+std::vector<GameObject*>* g_pGameObjectList;
 
 
 bool g_snow = false;
@@ -404,21 +404,37 @@ void ShutdownD3D()
 /////////////////////////////////////////////////////////////////////////////////////////////
 HRESULT InitialiseGraphics()
 {
+	g_directional_light_colour = XMVectorSet(0.9f, 0.9f, 0.9f, 0.0f); // 
+	g_ambient_light_colour = XMVectorSet(0.05f, 0.05f, 0.25f, 1.0f); // use a small value for ambient
+
 	ModelManager::Instance()->SetUpDevice(g_pD3DDevice, g_pImmediateContext);
 
 	g_pCamera = new Camera(0.0f, 0.0f, -0.5f, 0.0f);
 
-	g_pEntityList = new std::vector<Entity*>();
-	g_pPlayer = new Player(g_pEntityList, 5, true, g_pInput, g_pCamera);
-	g_pCamera->SetUpPlayerFollow(g_pPlayer, 50, 75, -45);
-	g_pEntityList->push_back(g_pPlayer);
-	g_pPlayer->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/Player.obj", (char*)"assets/texture.bmp"); //PlayerTexture.bmp is cursed
-	g_pPlayer->SetPosition(0, 15, 50);
-	g_pPlayer->SetVelocity(0, 1, 0);
-	g_pEntity1 = new Physics(g_pEntityList, 1, true);
-	g_pEntityList->push_back(g_pEntity1);
-	g_pEntity1->SetUpModel(g_pD3DDevice, g_pImmediateContext, (char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
-	g_pEntity1->SetPosition(0, 0, 50);
+	g_pGameObjectList = new std::vector<GameObject*>();
+	GameObject* player = new GameObject(g_pGameObjectList);
+	Player* playerInput = new Player(g_pInput, g_pCamera);
+	g_pCamera->SetUpPlayerFollow(playerInput, 50, 75, -45);
+	player->AddComponent(playerInput);
+
+	Physics* playerPhysics = new Physics(5, true);
+	player->AddComponent(playerPhysics);
+
+	Model* playerModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
+	playerModel->SetUpModel((char*)"assets/Player.obj", (char*)"assets/texture.bmp");
+	player->AddComponent(playerModel);
+
+	g_pGameObjectList->push_back(player);
+
+	GameObject* ball = new GameObject(g_pGameObjectList);
+	Physics* ballPhysics = new Physics(1, true);
+	ball->AddComponent(ballPhysics);
+	Model* ballModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
+	ballModel->SetUpModel((char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
+	ball->AddComponent(ballModel);
+	ball->SetPosition(25, 25, 25);
+	g_pGameObjectList->push_back(ball);
+
 	
 	HRESULT hr = S_OK;
 
@@ -455,7 +471,7 @@ void RenderFrame(void)
 	}
 	if (g_pInput->KeyIsPressed(DIK_P))
 	{
-		g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::STREAM, g_pPlayer->GetPosition(), g_pPlayer->GetForward());
+		//g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::STREAM, g_pPlayer->GetPosition(), g_pPlayer->GetForward());
 	}
 	if (g_pInput->KeyIsPressed(DIK_O))
 	{
@@ -474,13 +490,10 @@ void RenderFrame(void)
 
 	g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	g_directional_light_colour = XMVectorSet(0.9f, 0.9f, 0.9f, 0.0f); // 
-	g_ambient_light_colour = XMVectorSet(0.05f, 0.05f, 0.25f, 1.0f); // use a small value for ambient
-
 																	 //select which primitive type to use 
 	g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	XMMATRIX projection, view;
-
+	XMMATRIX world, projection, view;
+	world = XMMatrixIdentity();
 	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0), (screenWidth / screenHeight) , 1.0, 1000.0);
 	
 	g_pCamera->Update();
@@ -489,11 +502,9 @@ void RenderFrame(void)
 	g_pSkyBox->Draw(&view, &projection);
 	XMVECTOR* camPos = &g_pCamera->GetPosition();
 
-	for (int i = 0; i < g_pEntityList->size(); i++)
+	for (int i = 0; i < g_pGameObjectList->size(); i++)
 	{
-		g_pEntityList->at(i)->Update();
-		g_pEntityList->at(i)->UpdateLighting(g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
-		g_pEntityList->at(i)->Draw(&view, &projection);
+		g_pGameObjectList->at(i)->Update(&world, &view, &projection);
 	}
 	g_pParticleSystem->Draw(&view, &projection, camPos);
 

@@ -1,5 +1,7 @@
 #pragma once
 #include "ModelManager.h"
+#include "Component.h"
+
 
 struct MODEL_CONSTANT_BUFFER
 {
@@ -9,9 +11,7 @@ struct MODEL_CONSTANT_BUFFER
 	XMVECTOR ambient_light_colour; // 16
 }; // 112 bytes
 
-
-
-class Model
+class Model : public Component
 {
 private:
 	ID3D11Device * m_pD3DDevice;
@@ -30,15 +30,19 @@ private:
 	XMVECTOR					m_bounding_sphere_centre;
 	float						m_bounding_sphere_radius;
 
+	XMVECTOR					m_directional_light_vector; 
+	XMVECTOR					m_directional_light_colour; 
+	XMVECTOR					m_ambient_light_colour; 
+
 public:
 	Model();
-	Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
+	Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMVECTOR directionVector, XMVECTOR directionColor, XMVECTOR ambientColor);
 	~Model();
 	HRESULT LoadObjModel(char* filename);
 	HRESULT LoadShader(char* filename);
 	HRESULT Draw(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection);
 	HRESULT AddTexture(char* filename);
-
+	void Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection);
 	void CalculateModelCentrePoint();
 	void CalculateBoundingSphereRadius();
 
@@ -48,5 +52,6 @@ public:
 	void setDirectionalLight(XMVECTOR direction, XMVECTOR color);
 	void setAmbientLight(XMVECTOR color);
 
+	void SetUpModel(char * modelFileName, char * textureFileName);
 };
 
