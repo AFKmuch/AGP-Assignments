@@ -9,12 +9,15 @@
 #include <map>
 #include <type_traits>
 #include <memory>
+#include "text2D.h"
 
 class Component;
 
 class GameObject
 {
 private:
+
+
 
 	std::map<const std::type_info*, Component*> m_components;
 

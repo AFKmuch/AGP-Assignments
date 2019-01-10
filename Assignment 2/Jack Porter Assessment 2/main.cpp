@@ -63,6 +63,8 @@ SkyBox* g_pSkyBox;
 ParticleSystem* g_pParticleSystem;
 Input* g_pInput;
 
+Text2D * g_p2DText;
+
 std::vector<GameObject*>* g_pGameObjectList;
 
 
@@ -379,6 +381,8 @@ HRESULT InitialiseD3D()
 
 	g_pImmediateContext->RSSetViewports(1, &viewport);
 
+	g_p2DText = new Text2D("assets/font1.bmp", g_pD3DDevice, g_pImmediateContext);
+
 	return S_OK;
 }
 
@@ -432,7 +436,7 @@ HRESULT InitialiseGraphics()
 	Model* ballModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
 	ballModel->SetUpModel((char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
 	ball->AddComponent(ballModel);
-	ball->SetPosition(25, 25, 25);
+	ball->SetPosition(50, 10, 50);
 	g_pGameObjectList->push_back(ball);
 
 	
@@ -485,13 +489,19 @@ void RenderFrame(void)
 	{
 		g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::SNOW, g_pCamera->GetPosition(), g_pCamera->GetForward());
 	}
+
+
 	// Clear the back buffer - choose a colour you like
 	g_pImmediateContext->ClearRenderTargetView(g_pBackBufferRTView, g_clear_colour);
 
 	g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	
+	string text = "X " + std::to_string(g_pGameObjectList->at(0)->GetVelocity().x) + "/ Y " + std::to_string(g_pGameObjectList->at(0)->GetVelocity().y) + "/ Z " + std::to_string(g_pGameObjectList->at(0)->GetVelocity().z);
+	g_p2DText->AddText(text, -1.0f, 1.0f, 0.05f);
 
-																	 //select which primitive type to use 
+	//select which primitive type to use 
 	g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	XMMATRIX world, projection, view;
 	world = XMMatrixIdentity();
 	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.0), (screenWidth / screenHeight) , 1.0, 1000.0);
@@ -501,6 +511,8 @@ void RenderFrame(void)
 	view = g_pCamera->GetViewMatrix();
 	g_pSkyBox->Draw(&view, &projection);
 	XMVECTOR* camPos = &g_pCamera->GetPosition();
+
+	g_p2DText->RenderText();
 
 	for (int i = 0; i < g_pGameObjectList->size(); i++)
 	{

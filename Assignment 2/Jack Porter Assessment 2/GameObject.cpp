@@ -3,7 +3,7 @@
 #include "Player.h"
 #include "Physics.h"
 #include "Model.h"
-
+#include <iostream>
 
 
 GameObject::GameObject()
@@ -48,8 +48,8 @@ void GameObject::Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection)
 	{
 		GetComponent<Physics>()->Update();
 	}
-
-	ChangePosition(m_velocity.x* Time::Instance()->DeltaTime(), m_velocity.y* Time::Instance()->DeltaTime(), m_velocity.z* Time::Instance()->DeltaTime()); // update movement
+	
+	ChangePosition(GetVelocity().x * Time::Instance()->DeltaTime(), GetVelocity().y* Time::Instance()->DeltaTime(), GetVelocity().z* Time::Instance()->DeltaTime()); // update movement
 	
 	if (HasComponent<Model>())
 	{

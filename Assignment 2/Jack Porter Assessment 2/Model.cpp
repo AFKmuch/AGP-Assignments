@@ -275,5 +275,10 @@ void Model::SetUpModel(char * modelFileName, char * textureFileName)
 	CalculateBoundingSphereRadius();
 }
 
+ObjFileModel * Model::GetModel()
+{
+	return m_pObject;
+}
+
 
 

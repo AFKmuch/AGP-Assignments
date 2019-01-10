@@ -16,6 +16,7 @@ public:
 
 	void Update();
 	bool CheckCollision();
+	bool CheckCollisionRay(GameObject* entity);
 
 	float GetWeight();
 	bool GetSimulated();

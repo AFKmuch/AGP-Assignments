@@ -53,5 +53,7 @@ public:
 	void setAmbientLight(XMVECTOR color);
 
 	void SetUpModel(char * modelFileName, char * textureFileName);
+
+	ObjFileModel* GetModel();
 };
 
