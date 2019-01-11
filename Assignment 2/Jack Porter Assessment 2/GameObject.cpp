@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Physics.h"
 #include "Model.h"
+#include "AI.h"
 #include <iostream>
 
 
@@ -44,13 +45,20 @@ void GameObject::Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection)
 		GetComponent<Player>()->Update();
 	}
 
+	if (HasComponent<AI>())
+	{
+		GetComponent<AI>()->Update();
+	}
+
 	if (HasComponent<Physics>())
 	{
 		GetComponent<Physics>()->Update();
 	}
 	
 	ChangePosition(GetVelocity().x * Time::Instance()->DeltaTime(), GetVelocity().y* Time::Instance()->DeltaTime(), GetVelocity().z* Time::Instance()->DeltaTime()); // update movement
-	
+	ChangePosition(m_forces.x* Time::Instance()->DeltaTime(), m_forces.y* Time::Instance()->DeltaTime(), m_forces.z* Time::Instance()->DeltaTime());
+	m_forces = XMVectorSet(m_forces.x / 1.005 , m_forces.y /1.005, m_forces.z /1.005 , 1);
+
 	if (HasComponent<Model>())
 	{
 		GetComponent<Model>()->Update(&local_world, view, projection);
@@ -131,6 +139,11 @@ XMVECTOR GameObject::GetVelocity()
 	return m_velocity;
 }
 
+XMVECTOR GameObject::GetForces()
+{
+	return m_forces;
+}
+
 std::vector<GameObject*>* GameObject::GetGameObjectList()
 {
 	return m_pGameObjectList;
@@ -180,6 +193,18 @@ void GameObject::ChangeScale(float x, float y, float z)
 void GameObject::ChangeVelocity(float x, float y, float z)
 {
 	m_velocity = XMVectorSet(m_velocity.x + x, m_velocity.y + y, m_velocity.z + z, 1);
+}
+
+void GameObject::AddForce(float x, float y, float z, bool Impulse)
+{
+	if (Impulse)
+	{
+		m_forces += XMVectorSet(x, y, z, 1);
+	}
+	else
+	{
+		m_forces += XMVectorSet(x * Time::Instance()->DeltaTime(), y * Time::Instance()->DeltaTime(), z * Time::Instance()->DeltaTime(), 1);
+	}
 }
 
 

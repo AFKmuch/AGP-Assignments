@@ -1,6 +1,8 @@
 #include "Physics.h"
 #include "Model.h"
 #include "Maths.h"
+#include "AI.h"
+#include "Player.h"
 
 Physics::Physics()
 {
@@ -20,9 +22,8 @@ Physics::~Physics()
 
 void Physics::Update()
 {
-	if (CheckCollision())
+	if (CheckCapsuelCollision())
 	{
-		m_pParent->SetVelocity(0, 0, 0);
 	}
 	if (m_pParent->GetPosition().y <= -5 && m_pParent->GetVelocity().y <= 0)
 	{
@@ -31,7 +32,16 @@ void Physics::Update()
 	}
 	else
 	{
-		m_pParent->ChangeVelocity(0, (m_gravity * m_weight) * Time::Instance()->DeltaTime(), 0);
+		if (m_simulated)
+		{
+			m_pParent->ChangeVelocity(-m_pParent->GetVelocity().x / 2, (m_gravity * m_weight) * Time::Instance()->DeltaTime(), -m_pParent->GetVelocity().z / 2);
+			
+		}
+		else
+		{
+			m_pParent->ChangeVelocity(-m_pParent->GetVelocity().x / 2, -m_pParent->GetVelocity().y / 2, -m_pParent->GetVelocity().z / 2);
+		}
+
 	}
 }
 
@@ -63,7 +73,7 @@ void Physics::ChangeWeight(float weight)
 }
 
 
-bool Physics::CheckCollision()
+bool Physics::CheckSphereCollision()
 {
 	GameObject* entity;
 	for (int i = 0; i < m_pParent->GetGameObjectList()->size(); i++)
@@ -87,6 +97,81 @@ bool Physics::CheckCollision()
 			}
 			else
 			{				
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool Physics::CheckCapsuelCollision()
+{
+	GameObject* entity;
+	for (int i = 0; i < m_pParent->GetGameObjectList()->size(); i++)
+	{
+		entity = m_pParent->GetGameObjectList()->at(i);
+		if (entity == m_pParent)
+		{
+			continue;
+		}
+		if (m_pParent->HasComponent<Model>() && entity->HasComponent<Model>())
+		{
+			XMVECTOR thisModelPos = m_pParent->GetComponent<Model>()->GetModelCentre(m_pParent->GetScale()) + m_pParent->GetPosition();
+			XMVECTOR thatModelPos = entity->GetComponent<Model>()->GetModelCentre(entity->GetScale()) + entity->GetPosition();
+
+			float thisRadius = m_pParent->GetComponent<Model>()->GetCapsuleRadius(m_pParent->GetScale());
+			float thatRadius = entity->GetComponent<Model>()->GetCapsuleRadius(entity->GetScale());
+
+			float thisBaseHeight = abs(m_pParent->GetComponent<Model>()->GetCapsuleHeight(m_pParent->GetScale()));
+			float thatBaseHeight = abs(entity->GetComponent<Model>()->GetCapsuleHeight(entity->GetScale()));
+
+			float thisTotalHeight = thisBaseHeight + (thisRadius * 2);
+			float thatTotalHeight = thatBaseHeight + (thatRadius * 2);
+
+			float thisFinalHeight = 0;
+			float thatFinalHeight = 0;
+			float difference = 0;
+
+			if (thisModelPos.y + (thisTotalHeight / 2) >= thatModelPos.y - (thatTotalHeight / 2) && thisModelPos.y - (thisTotalHeight / 2) <= thatModelPos.y + (thatTotalHeight / 2))
+			{
+				difference = (thatModelPos.y + (thatTotalHeight / 2)) - (thisModelPos.y - (thisTotalHeight / 2));
+				thisFinalHeight = thisRadius + (difference / 2);
+				thatFinalHeight = thatTotalHeight - (difference / 2);
+			}
+			else if (thisModelPos.y - (thisTotalHeight / 2 ) >= thatModelPos.y + (thatTotalHeight / 2))
+			{
+				thisFinalHeight = 0;
+				thatFinalHeight = thatBaseHeight / 2;
+			}
+			else if (thisModelPos.y + (thisTotalHeight / 2) <= thatModelPos.y - (thatTotalHeight / 2))
+			{
+				thisFinalHeight = thisBaseHeight / 2;
+				thatFinalHeight = 0;
+			}
+			XMVECTOR thisModelCheckPos = XMVectorSet(thisModelPos.x, thisModelPos.y + thisFinalHeight, thisModelPos.z, 0);
+			XMVECTOR thatModelCheckPos = XMVectorSet(thatModelPos.x, thatModelPos.y + thatFinalHeight, thatModelPos.z, 0);
+
+			XMVECTOR distanceVector = XMVectorSet(thatModelCheckPos.x - thisModelCheckPos.x, thatModelCheckPos.y - thisModelCheckPos.y, thatModelCheckPos.z - thisModelCheckPos.z, 1);
+			float distance = (distanceVector.x * distanceVector.x) + (distanceVector.y * distanceVector.y) + (distanceVector.z * distanceVector.z);
+
+			distance = sqrt(distance);
+			if (distance > (thisRadius + thatRadius))
+			{
+				continue;
+			}
+			else
+			{
+				float normalized = sqrt(pow(distanceVector.x, 2) + pow(distanceVector.y, 2) + pow(distanceVector.z, 2));
+				XMVECTOR norm = distanceVector * normalized;
+				norm /= 10;
+				if (m_pParent->HasComponent<AI>() && entity->HasComponent<Player>())
+				{
+					entity->GetComponent<Player>()->ChangeHealth(-10);
+					entity->AddForce(m_pParent->GetVelocity().x * 10, 100, m_pParent->GetVelocity().y * 10, true);
+					return true;
+				}
+				m_pParent->SetVelocity(-norm.x * entity->GetComponent<Physics>()->GetWeight(), -norm.y * entity->GetComponent<Physics>()->GetWeight(), -norm.z * entity->GetComponent<Physics>()->GetWeight());
+				entity->SetVelocity(-norm.x * m_pParent->GetComponent<Physics>()->GetWeight(), -norm.y * m_pParent->GetComponent<Physics>()->GetWeight(), -norm.z * m_pParent->GetComponent<Physics>()->GetWeight());
 				return true;
 			}
 		}

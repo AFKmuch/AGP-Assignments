@@ -1,11 +1,13 @@
 #include "Player.h"
 #include "Camera.h"
 #include "Input.h"
+#include "Model.h"
 
 Player::Player(Input* input, Camera* camera)
 {
 	m_pInput = input;
 	m_pCamera = camera;
+	m_health = m_maxHealth;
 }
 
 
@@ -52,6 +54,48 @@ void Player::Update()
 	//Jump
 	if (m_pInput->KeyIsPressed(DIK_SPACE) && m_pParent->GetVelocity().y == 0)
 	{
-		m_pParent->SetVelocity(m_pParent->GetVelocity().x, 100, m_pParent->GetVelocity().z);
+		m_pParent->SetVelocity(m_pParent->GetVelocity().x, m_playerJumpHeight, m_pParent->GetVelocity().z);
 	}
+	if (m_currentFrameCount >= m_frameUpdateCount)
+	{
+		m_currentFrameCount = 0;
+		switch (m_frameNumber)
+		{
+			case 0:
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle00.obj", (char*)"assets/texture.bmp");
+				break;
+
+			case 1:
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle01.obj", (char*)"assets/texture.bmp");
+				break;
+
+			case 2:
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle02.obj", (char*)"assets/texture.bmp");
+				break;
+
+			case 3:
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle03.obj", (char*)"assets/texture.bmp");
+				break;
+
+			case 4:
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle04.obj", (char*)"assets/texture.bmp");
+				break;
+
+		}
+
+
+		m_frameNumber++;
+		if (m_frameNumber > 4)
+		{
+			m_frameNumber = 0;
+		}
+
+	}
+	m_currentFrameCount += Time::Instance()->DeltaTime();
+
+}
+
+void Player::ChangeHealth(float change)
+{
+	m_health += change;
 }

@@ -25,14 +25,16 @@ private:
 	ID3D11ShaderResourceView*	m_pTexture;
 	ID3D11SamplerState*			m_pSampler;
 
-	MODEL_CONSTANT_BUFFER		m_model_cb_values;
+	MODEL_CONSTANT_BUFFER		m_modelCbValues;
 
-	XMVECTOR					m_bounding_sphere_centre;
-	float						m_bounding_sphere_radius;
+	XMVECTOR					m_boundingSphereCentre;
+	float						m_boundingSphereRadius;
+	float						m_boundingHeight;
+	float						m_boundingWidth;
 
-	XMVECTOR					m_directional_light_vector; 
-	XMVECTOR					m_directional_light_colour; 
-	XMVECTOR					m_ambient_light_colour; 
+	XMVECTOR					m_directionalLightVector; 
+	XMVECTOR					m_directionalLightColour; 
+	XMVECTOR					m_ambientLightColour; 
 
 public:
 	Model();
@@ -48,6 +50,9 @@ public:
 
 	XMVECTOR GetBoundingSphereWorldSpacePosition(XMVECTOR scale, XMVECTOR position, XMVECTOR rotation);
 	float GetBoundingSphereRadius(XMVECTOR scale);
+	float GetCapsuleHeight(XMVECTOR scale);
+	float GetCapsuleRadius(XMVECTOR scale);
+	XMVECTOR GetModelCentre(XMVECTOR scale);
 
 	void setDirectionalLight(XMVECTOR direction, XMVECTOR color);
 	void setAmbientLight(XMVECTOR color);

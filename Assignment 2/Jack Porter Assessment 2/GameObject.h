@@ -29,6 +29,7 @@ private:
 	XMVECTOR					m_rotation;
 	XMVECTOR					m_scale;
 	XMVECTOR					m_velocity;
+	XMVECTOR					m_forces;
 
 public:
 
@@ -47,6 +48,7 @@ public:
 	XMVECTOR GetRotation();
 	XMVECTOR GetScale();
 	XMVECTOR GetVelocity();
+	XMVECTOR GetForces();
 	std::vector<GameObject*>* GetGameObjectList();
 
 	void SetPosition(float x, float y, float z);
@@ -59,6 +61,9 @@ public:
 	void ChangeRotation(float x, float y, float z);
 	void ChangeScale(float x, float y, float z);
 	void ChangeVelocity(float x, float y, float z);
+
+	void AddForce(float x, float y, float z, bool Impulse);
+	
 
 	void AddChild(GameObject* child);
 	bool DetatchChild(GameObject* child);

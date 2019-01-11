@@ -21,6 +21,7 @@
 #include "SkyBox.h"
 #include "ParticleSystem.h"
 #include "GameObject.h"
+#include "AI.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 //	Global Variables
@@ -436,10 +437,32 @@ HRESULT InitialiseGraphics()
 	Model* ballModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
 	ballModel->SetUpModel((char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
 	ball->AddComponent(ballModel);
-	ball->SetPosition(50, 10, 50);
+	ball->SetPosition(0, 75, 0);
+	ball->SetScale(5);
 	g_pGameObjectList->push_back(ball);
 
-	
+	GameObject* ball2 = new GameObject(g_pGameObjectList);
+	Physics* ballPhysics2 = new Physics(3, true);
+	ball2->AddComponent(ballPhysics2);
+	Model* ballModel2 = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
+	ballModel2->SetUpModel((char*)"assets/Robot.obj", (char*)"assets/RobotTexture.bmp");
+	ball2->AddComponent(ballModel2);
+	ball2->SetPosition(100, 25, 50);
+	ball2->SetScale(0.25);
+	AI* robotAI = new AI(player);
+	ball2->AddComponent(robotAI);
+	g_pGameObjectList->push_back(ball2);
+
+	GameObject* cube = new GameObject(g_pGameObjectList);
+	Physics* cubePhysics = new Physics(1, true);
+	cube->AddComponent(cubePhysics);
+	Model* cubeModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
+	cubeModel->SetUpModel((char*)"assets/cube.obj", (char*)"assets/texture.bmp");
+	cube->AddComponent(cubeModel);
+	cube->SetPosition(25, 0, 25);
+	cube->SetScale(5);
+	g_pGameObjectList->push_back(cube);
+
 	HRESULT hr = S_OK;
 
 	// create constant buffer
@@ -496,7 +519,7 @@ void RenderFrame(void)
 
 	g_pImmediateContext->ClearDepthStencilView(g_pZBuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	
-	string text = "X " + std::to_string(g_pGameObjectList->at(0)->GetVelocity().x) + "/ Y " + std::to_string(g_pGameObjectList->at(0)->GetVelocity().y) + "/ Z " + std::to_string(g_pGameObjectList->at(0)->GetVelocity().z);
+	string text = std::to_string(Time::Instance()->GetFramesPerSecond()) + "FPS";
 	g_p2DText->AddText(text, -1.0f, 1.0f, 0.05f);
 
 	//select which primitive type to use 

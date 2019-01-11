@@ -14,6 +14,10 @@ private:
 	double m_secondsPerCount;
 	double m_deltaTime;
 
+	int m_framesPerSecond;
+	int m_frameCount;
+	float m_secondCount;
+
 	bool m_stopped;
 public:
 	Time();
@@ -21,6 +25,7 @@ public:
 
 	float TotalTime()const;
 	float DeltaTime()const;
+	int	  GetFramesPerSecond()const;
 
 	void Reset();
 	void Start();

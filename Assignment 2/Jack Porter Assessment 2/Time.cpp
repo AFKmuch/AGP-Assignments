@@ -5,6 +5,9 @@ Time::Time() : m_secondsPerCount(0.0), m_deltaTime(-1.0), m_baseTime(0), m_pause
 	__int64 countsPerSecond;
 	QueryPerformanceFrequency((LARGE_INTEGER*)&countsPerSecond);
 	m_secondsPerCount = 1.0 / (double)countsPerSecond;
+	m_framesPerSecond = 0;
+	m_frameCount = 0;
+	m_secondCount = 0;
 }
 
 
@@ -28,6 +31,11 @@ float Time::TotalTime() const
 float Time::DeltaTime() const
 {
 	return (float)m_deltaTime;
+}
+
+int Time::GetFramesPerSecond() const
+{
+	return m_framesPerSecond;
 }
 
 void Time::Reset()
@@ -94,6 +102,19 @@ void Time::Tick()
 
 	//Prepare for next frame
 	m_previousTime = m_currentTime;
+
+	if (m_secondCount < 1)
+	{
+		m_frameCount++;
+		m_secondCount += m_deltaTime;
+	}
+	else
+	{
+		m_framesPerSecond = m_frameCount;
+		m_secondCount = 0;
+		m_frameCount = 0;
+	}
+	
 
 	//Force nonnegative. The DXSDK's CDXUTTimer mentions that if the processor goes into a power save mode or we get shuffled to another processor, then m_deltaTime can be negative
 	if (m_deltaTime < 0.0)

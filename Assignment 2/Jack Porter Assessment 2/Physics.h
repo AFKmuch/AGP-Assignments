@@ -15,7 +15,8 @@ public:
 	~Physics();
 
 	void Update();
-	bool CheckCollision();
+	bool CheckSphereCollision();
+	bool CheckCapsuelCollision();
 	bool CheckCollisionRay(GameObject* entity);
 
 	float GetWeight();

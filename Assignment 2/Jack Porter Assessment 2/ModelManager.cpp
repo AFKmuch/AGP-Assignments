@@ -31,6 +31,19 @@ Object * ModelManager::LoadModel(char * fileName)
 	}
 }
 
+TextureStruct * ModelManager::LoadTexture(char * fileName)
+{
+	if (m_Textures.find(fileName) != m_Textures.end())
+	{
+		return m_Textures[fileName];
+	}
+	else
+	{
+		m_Textures[fileName] = CreateTexture(fileName);
+		return m_Textures[fileName];
+	}
+}
+
 Object * ModelManager::CreateModel(char * fileName)
 {
 	HRESULT hr = S_OK;
@@ -117,6 +130,25 @@ Object * ModelManager::CreateModel(char * fileName)
 
 	m_pImmediateContext->IASetInputLayout(newObject->InputLayout);
 	return newObject;
+}
+
+TextureStruct * ModelManager::CreateTexture(char * fileName)
+{
+	TextureStruct* newTexture = new TextureStruct();
+
+	D3D11_SAMPLER_DESC sampler_desc;
+	ZeroMemory(&sampler_desc, sizeof(sampler_desc));
+	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	m_pD3DDevice->CreateSamplerState(&sampler_desc, &newTexture->Sampler);
+
+	D3DX11CreateShaderResourceViewFromFile(m_pD3DDevice, fileName, NULL, NULL, &newTexture->Texture, NULL); // Create texture // Create texture
+
+	return newTexture;
 }
 
 ModelManager * ModelManager::Instance()

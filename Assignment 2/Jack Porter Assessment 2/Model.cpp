@@ -118,12 +118,12 @@ HRESULT Model::Draw(XMMATRIX* world, XMMATRIX * view, XMMATRIX * projection)
 {
 	XMMATRIX transpose;
 	transpose = XMMatrixTranspose((*world));
-	m_model_cb_values.WorldViewProjection = (*world) * (*view) * (*projection);
-	m_model_cb_values.directional_light_vector = XMVector3Transform(m_directional_light_vector, transpose);
-	m_model_cb_values.directional_light_vector = XMVector3Normalize(m_model_cb_values.directional_light_vector);
-	m_model_cb_values.directional_light_colour = m_directional_light_colour;
-	m_model_cb_values.ambient_light_colour = m_ambient_light_colour;
-	m_pImmediateContext->UpdateSubresource(m_pConstantBuffer, 0, 0, &m_model_cb_values, 0, 0);
+	m_modelCbValues.WorldViewProjection = (*world) * (*view) * (*projection);
+	m_modelCbValues.directional_light_vector = XMVector3Transform(m_directionalLightVector, transpose);
+	m_modelCbValues.directional_light_vector = XMVector3Normalize(m_modelCbValues.directional_light_vector);
+	m_modelCbValues.directional_light_colour = m_directionalLightColour;
+	m_modelCbValues.ambient_light_colour = m_ambientLightColour;
+	m_pImmediateContext->UpdateSubresource(m_pConstantBuffer, 0, 0, &m_modelCbValues, 0, 0);
 	m_pImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
 	m_pImmediateContext->VSSetShader(m_pVShader, 0, 0);
 	m_pImmediateContext->PSSetShader(m_pPShader, 0, 0);
@@ -137,17 +137,19 @@ HRESULT Model::Draw(XMMATRIX* world, XMMATRIX * view, XMMATRIX * projection)
 
 HRESULT Model::AddTexture(char * filename)
 {
-	D3D11_SAMPLER_DESC sampler_desc;
-	ZeroMemory(&sampler_desc, sizeof(sampler_desc));
-	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	m_pD3DDevice->CreateSamplerState(&sampler_desc, &m_pSampler);
-
-	D3DX11CreateShaderResourceViewFromFile(m_pD3DDevice, filename, NULL, NULL, &m_pTexture, NULL); // Create texture
+	//D3D11_SAMPLER_DESC sampler_desc;
+	//ZeroMemory(&sampler_desc, sizeof(sampler_desc));
+	//sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	//sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	//sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	//sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	//sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+	//
+	//m_pD3DDevice->CreateSamplerState(&sampler_desc, &m_pSampler);
+	//
+	//D3DX11CreateShaderResourceViewFromFile(m_pD3DDevice, filename, NULL, NULL, &m_pTexture, NULL); // Create texture
+	m_pTexture = ModelManager::Instance()->LoadTexture(filename)->Texture;
+	m_pSampler = ModelManager::Instance()->LoadTexture(filename)->Sampler;
 
 	return S_OK;
 }
@@ -159,13 +161,13 @@ void Model::Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection)
 
 void Model::CalculateModelCentrePoint()
 {
-	m_bounding_sphere_centre = XMVectorSet(0, 0, 0, 0);
-	float maxX = -D3D11_FLOAT32_MAX;;
-	float maxY = -D3D11_FLOAT32_MAX;;
-	float maxZ = -D3D11_FLOAT32_MAX;;
-	float minX = D3D11_FLOAT32_MAX;;
-	float minY = D3D11_FLOAT32_MAX;;
-	float minZ = D3D11_FLOAT32_MAX;;
+	m_boundingSphereCentre = XMVectorSet(0, 0, 0, 0);
+	float maxX = -D3D11_FLOAT32_MAX;
+	float maxY = -D3D11_FLOAT32_MAX;
+	float maxZ = -D3D11_FLOAT32_MAX;
+	float minX = D3D11_FLOAT32_MAX;
+	float minY = D3D11_FLOAT32_MAX;
+	float minZ = D3D11_FLOAT32_MAX;
 
 	for (int i = 0; i < m_pObject->numverts; i++)
 	{
@@ -200,7 +202,10 @@ void Model::CalculateModelCentrePoint()
 	float distanceY = abs(minY) + abs(maxY);
 	float distanceZ = abs(minZ) + abs(maxZ);
 
-	XMVectorSet(minX + (distanceX / 2), minY + (distanceY / 2), minZ + (distanceZ / 2), 0);
+	m_boundingWidth = distanceZ / 2;
+	m_boundingHeight = distanceY - (m_boundingWidth * 2);
+
+	m_boundingSphereCentre = XMVectorSet(minX + (distanceX / 2), minY + (distanceY / 2), minZ + (distanceZ / 2), 0);
 }
 
 void Model::CalculateBoundingSphereRadius()
@@ -208,9 +213,9 @@ void Model::CalculateBoundingSphereRadius()
 	float maxDistance = 0;
 	for (int i = 0; i < m_pObject->numverts; i++)
 	{
-		float x = m_pObject->vertices[i].Pos.x + m_bounding_sphere_centre.x;
-		float y = m_pObject->vertices[i].Pos.y + m_bounding_sphere_centre.y;
-		float z = m_pObject->vertices[i].Pos.z + m_bounding_sphere_centre.z;
+		float x = m_pObject->vertices[i].Pos.x + m_boundingSphereCentre.x;
+		float y = m_pObject->vertices[i].Pos.y + m_boundingSphereCentre.y;
+		float z = m_pObject->vertices[i].Pos.z + m_boundingSphereCentre.z;
 		float distance = (pow(x, 2) + pow(y, 2) + pow(z, 2));
 		if (distance > maxDistance)
 		{
@@ -218,8 +223,9 @@ void Model::CalculateBoundingSphereRadius()
 		}
 	}
 
-	m_bounding_sphere_radius = sqrt(maxDistance);
+	m_boundingSphereRadius = sqrt(maxDistance);
 }
+
 
 XMVECTOR Model::GetBoundingSphereWorldSpacePosition(XMVECTOR scale, XMVECTOR position, XMVECTOR rotation)
 {
@@ -231,7 +237,7 @@ XMVECTOR Model::GetBoundingSphereWorldSpacePosition(XMVECTOR scale, XMVECTOR pos
 	world *= XMMatrixTranslation(position.x, position.y, position.z);
 
 	XMVECTOR offset;
-	offset = XMVector3Transform(m_bounding_sphere_centre, world);
+	offset = XMVector3Transform(m_boundingSphereCentre, world);
 
 	return offset;
 }
@@ -251,18 +257,33 @@ float Model::GetBoundingSphereRadius(XMVECTOR scale)
 	{
 		maxScale = scale.z;
 	}
-	return m_bounding_sphere_radius * maxScale;
+	return m_boundingSphereRadius * maxScale;
+}
+
+float Model::GetCapsuleHeight(XMVECTOR scale)
+{
+	return m_boundingHeight * scale.y;
+}
+
+float Model::GetCapsuleRadius(XMVECTOR scale)
+{
+	return m_boundingWidth * scale.z;
+}
+
+XMVECTOR Model::GetModelCentre(XMVECTOR scale)
+{
+	return m_boundingSphereCentre * scale;
 }
 
 void Model::setDirectionalLight(XMVECTOR direction, XMVECTOR color)
 {
-	m_directional_light_vector = direction;
-	m_directional_light_colour = color;
+	m_directionalLightVector = direction;
+	m_directionalLightColour = color;
 }
 
 void Model::setAmbientLight(XMVECTOR color)
 {
-	m_ambient_light_colour = color;
+	m_ambientLightColour = color;
 }
 
 void Model::SetUpModel(char * modelFileName, char * textureFileName)
