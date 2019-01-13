@@ -7,7 +7,7 @@ class AI : public Component
 {
 private:
 	GameObject* m_pPlayer;
-	float m_movementSpeed = 15;
+	float m_movementSpeed = 50;
 
 
 public:

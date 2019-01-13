@@ -1,28 +1,37 @@
 #include "ParticleSystem.h"
+#include "ModelManager.h"
+
+ParticleSystem* ParticleSystem::s_instance;
 
 ParticleSystem::ParticleSystem()
 {
 }
 
-ParticleSystem::ParticleSystem(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
-{
-	m_pD3DDevice = device;
-	m_pImmediateContext = deviceContext;
-	for (int i = 0; i < 5000; i++)
-	{
-		Particle* newParticle = new Particle;
-		newParticle->color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		newParticle->gravity = 0;
-		newParticle->position = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-		newParticle->velocity = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-		m_free.push_back(newParticle);
-	}
-}
-
 ParticleSystem::~ParticleSystem()
 {
-	if (m_pTexture)	m_pTexture->Release();
-	if (m_pSampler) m_pSampler->Release();
+	std::list<Particle*>::iterator it;
+	if (m_active.size() > 0)
+	{
+		for (int i = 0; i < m_active.size(); i++)
+		{
+			it = m_active.begin();
+			std::advance(it, i);
+			if ((*it)->texture) (*it)->texture->Release();
+			if ((*it)->sampler) (*it)->sampler->Release();
+		}
+	}
+
+	if (m_active.size() > 0)
+	{
+		for (int i = 0; i < m_free.size(); i++)
+		{
+			it = m_free.begin();
+			std::advance(it, i);
+			if ((*it)->texture) (*it)->texture->Release();
+			if ((*it)->sampler) (*it)->sampler->Release();
+		}
+	}
+
 	if (m_pConstantBuffer) m_pConstantBuffer->Release();
 	if (m_pInputLayout) m_pInputLayout->Release();
 	if (m_pVShader) m_pVShader->Release();
@@ -30,24 +39,71 @@ ParticleSystem::~ParticleSystem()
 
 }
 
+void ParticleSystem::SetUpParticleSystem(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
+{
+	m_pD3DDevice = device;
+	m_pImmediateContext = deviceContext;
+
+	for (int i = 0; i < 5000; i++)
+	{
+		Particle* newParticle = new Particle;
+		newParticle->color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		newParticle->gravity = 0;
+		newParticle->sampler = ModelManager::Instance()->LoadTexture((char*)"assets/Particles/DeafaultParticle.bmp")->Sampler;
+		newParticle->texture = ModelManager::Instance()->LoadTexture((char*)"assets/Particles/DeafaultParticle.bmp")->Texture;
+		newParticle->position = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		newParticle->velocity = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		m_free.push_back(newParticle);
+	}
+
+	D3D11_BLEND_DESC b;
+	b.RenderTarget[0].BlendEnable = FALSE;
+	b.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	b.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	b.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	b.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	b.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	b.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	b.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	b.IndependentBlendEnable = TRUE;
+	b.AlphaToCoverageEnable = TRUE;
+
+	m_pD3DDevice->CreateBlendState(&b, &m_pAlphaBlendDisabled);
+
+	D3D11_BLEND_DESC c;
+	c.RenderTarget[0].BlendEnable = TRUE;
+	c.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	c.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	c.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	c.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	c.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	c.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	c.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	c.IndependentBlendEnable = FALSE;
+	c.AlphaToCoverageEnable = FALSE;
+
+	m_pD3DDevice->CreateBlendState(&c, &m_pAlphaBlendEnabled);
+
+}
+
 HRESULT ParticleSystem::CreateParticle()
 {
 	HRESULT hr = S_OK;
-	XMFLOAT3 vertices[6] =//verts for the quad NOTE: could be changed to make different shapes?? Side Note: Or you could use alpha and a square so you're only drawing 2 triangles.
+	XMFLOAT3 vertices[] =//verts for the quad NOTE: could be changed to make different shapes?? Side Note: Or you could use alpha and a square so you're only drawing 2 triangles.
 	{
-		XMFLOAT3(-1.0f,-1.0f,0.0f),
-		XMFLOAT3(1.0f,1.0f,0.0f),
-		XMFLOAT3(-1.0f,1.0f,0.0f),
-		XMFLOAT3(-1.0f,-1.0f,0.0f),
-		XMFLOAT3(1.0f,-1.0f,0.0f),
-		XMFLOAT3(1.0f,1.0f,0.0f),
+		XMFLOAT3(-1.0f,-1.0f,0.0f),	//XMFLOAT2(0.0f, 1.0f) },
+		XMFLOAT3(1.0f, 1.0f,0.0f),	//XMFLOAT2(1.0f, 0.0f) },
+		XMFLOAT3(-1.0f, 1.0f,0.0f),	//XMFLOAT2(0.0f, 0.0f) },
+		XMFLOAT3(-1.0f,-1.0f,0.0f),	//XMFLOAT2(0.0f, 1.0f) },
+		XMFLOAT3(1.0f,-1.0f,0.0f),	//XMFLOAT2(1.0f, 1.0f) },
+		XMFLOAT3(1.0f, 1.0f,0.0f),	//XMFLOAT2(1.0f, 0.0f) }
 	};
 
 	//create the vert buffer
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;//both cpu and gpu
-	bufferDesc.ByteWidth = sizeof(XMFLOAT3) * 6/*VERTCOUNT*/;
+	bufferDesc.ByteWidth = sizeof(vertices);
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;//edit on the cpu
 
@@ -64,8 +120,6 @@ HRESULT ParticleSystem::CreateParticle()
 												 //unlock the buffer
 	m_pImmediateContext->Unmap(m_pVertexBuffer, NULL);
 
-	/*CalcModelCentrePoint();
-	CalcBoundingSphereRadius();*/
 	LoadShader();
 	return S_OK;
 }
@@ -148,17 +202,6 @@ HRESULT ParticleSystem::LoadShader()
 
 	m_pImmediateContext->IASetInputLayout(m_pInputLayout);
 
-	//D3D11_SAMPLER_DESC sampler_desc;
-	//ZeroMemory(&sampler_desc, sizeof(sampler_desc));
-	//sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	//sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	//sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	//sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	//sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-	//
-	//m_pD3DDevice->CreateSamplerState(&sampler_desc, &m_pSampler);
-	//
-	//D3DX11CreateShaderResourceViewFromFile(m_pD3DDevice, textureFileName, NULL, NULL, &m_pTexture, NULL); // Create texture
 	return S_OK;
 }
 
@@ -211,34 +254,28 @@ HRESULT ParticleSystem::DrawOne(Particle * one, XMMATRIX * view, XMMATRIX * proj
 	cBufferValues.color = one->color;
 	m_pImmediateContext->UpdateSubresource(m_pConstantBuffer, 0, 0, &cBufferValues, 0, 0);
 	m_pImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
-	m_pImmediateContext->PSSetSamplers(0, 1, &m_pSampler);
-	m_pImmediateContext->PSSetShaderResources(0, 1, &m_pTexture);
 
 	m_pImmediateContext->VSSetShader(m_pVShader, 0, 0);
 	m_pImmediateContext->PSSetShader(m_pPShader, 0, 0);
 
 	m_pImmediateContext->IASetInputLayout(m_pInputLayout);
 
+	m_pImmediateContext->PSSetSamplers(0, 1, &one->sampler);
+	m_pImmediateContext->PSSetShaderResources(0, 1, &one->texture);
+
+	m_pImmediateContext->OMSetBlendState(m_pAlphaBlendEnabled, 0, 0xffffffff);
+
 	//draw the vertex buffer to the back buffer
 	m_pImmediateContext->Draw(6, 0);
 
-
+	m_pImmediateContext->OMSetBlendState(m_pAlphaBlendDisabled, 0, 0xffffffff);
 	return S_OK;
 }
 
-HRESULT ParticleSystem::AddTexture(char * filename)
+HRESULT ParticleSystem::AddTexture(char * filename, Particle* particle)
 {
-	D3D11_SAMPLER_DESC sampler_desc;
-	ZeroMemory(&sampler_desc, sizeof(sampler_desc));
-	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	m_pD3DDevice->CreateSamplerState(&sampler_desc, &m_pSampler);
-
-	D3DX11CreateShaderResourceViewFromFile(m_pD3DDevice, filename, NULL, NULL, &m_pTexture, NULL); // Create texture
+	particle->texture = ModelManager::Instance()->LoadTexture(filename)->Texture;
+	particle->sampler = ModelManager::Instance()->LoadTexture(filename)->Sampler;
 
 	return S_OK;
 }
@@ -252,13 +289,14 @@ void ParticleSystem::LoadEffect(PARTICLE_EFFECT_TYPE type, XMVECTOR startPos, XM
 		{
 			if (m_free.size() > 0)
 			{
+				AddTexture((char*)"assets/Particles/flame_01.png", (*m_free.begin()));
 				//Set random RGB values
 				float r = (std::rand() % 2);
 				float g = (std::rand() % 2);
 				float b = (std::rand() % 2);
 				(*m_free.begin())->color = { r, g, b, 1.0f };
 
-				(*m_free.begin())->scale = 0.3f;
+				(*m_free.begin())->scale = 1;
 
 				//set life and gravity
 				(*m_free.begin())->maxLife = 2.0f;
@@ -292,13 +330,14 @@ void ParticleSystem::LoadEffect(PARTICLE_EFFECT_TYPE type, XMVECTOR startPos, XM
 		{
 			if (m_free.size() > 0)
 			{
+				AddTexture((char*)"assets/Particles/flame_01.png", (*m_free.begin()));
 				//Set random RGB values
 				float r = (std::rand() % 2);
 				float g = (std::rand() % 2);
 				float b = (std::rand() % 2);
 				(*m_free.begin())->color = { r, g, b, 1.0f };
 
-				(*m_free.begin())->scale = 0.3f;
+				(*m_free.begin())->scale = 1;
 
 				//set life and gravity
 				(*m_free.begin())->maxLife = 4.0f;
@@ -327,10 +366,11 @@ void ParticleSystem::LoadEffect(PARTICLE_EFFECT_TYPE type, XMVECTOR startPos, XM
 		{
 			if (m_free.size() > 0)
 			{
+				AddTexture((char*)"assets/Particles/Snowflake.png", (*m_free.begin()));
 				//Set white RGB values
 				(*m_free.begin())->color = { 1.0f, 1.0f, 1.0f, 0.5f };
 
-				(*m_free.begin())->scale = 0.15f;
+				(*m_free.begin())->scale = 1;
 
 				//set life and gravity
 				(*m_free.begin())->maxLife = 10.0f;
@@ -369,6 +409,15 @@ void ParticleSystem::LoadEffect(PARTICLE_EFFECT_TYPE type, XMVECTOR startPos, XM
 	default:
 		break;
 	}
+}
+
+ParticleSystem * ParticleSystem::Instance()
+{
+	if (!s_instance)
+	{
+		s_instance = new ParticleSystem();
+	}
+	return s_instance;
 }
 
 

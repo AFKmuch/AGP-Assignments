@@ -14,10 +14,11 @@ GameObject::GameObject()
 	m_scale = XMVectorSet(1, 1, 1, 0);
 }
 
-GameObject::GameObject(std::vector<GameObject*>* entityList)
+GameObject::GameObject(std::vector<GameObject*>* gameObjectList, std::vector<GameObject*>* environmentList)
 {
-	m_pGameObjectList = entityList;
-	m_scale = XMVectorSet(1, 1, 1,0);
+	m_pGameObjectList = gameObjectList;
+	m_pEnvironmentList = environmentList;
+	m_scale = XMVectorSet(1, 1, 1, 0);
 }
 
 
@@ -147,6 +148,11 @@ XMVECTOR GameObject::GetForces()
 std::vector<GameObject*>* GameObject::GetGameObjectList()
 {
 	return m_pGameObjectList;
+}
+
+std::vector<GameObject*>* GameObject::GetEnvironmentList()
+{
+	return  m_pEnvironmentList;
 }
 
 void GameObject::SetPosition(float x, float y, float z)

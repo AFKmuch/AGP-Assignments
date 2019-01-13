@@ -11,8 +11,8 @@ class Player :
 private:
 	Input * m_pInput;
 	Camera* m_pCamera;
-	float m_playerMovementSpeed = 50;
-	float m_playerJumpHeight = 75;
+	float m_playerMovementSpeed = 100;
+	float m_playerJumpHeight = 50;
 	float m_cameraRotationSensitivity = 50;
 	float m_RotationSpeed = 10;
 	int	m_frameNumber = 0;
@@ -26,5 +26,6 @@ public:
 	~Player();
 	void Update();
 	void ChangeHealth(float change);
+	float GetHealth();
 };
 

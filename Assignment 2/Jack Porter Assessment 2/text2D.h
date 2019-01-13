@@ -49,6 +49,9 @@ private:
 	ID3D11DepthStencilState* pDepthEnabledStencilState;		// state to turn on Z buffer
 	ID3D11DepthStencilState* pDepthDisabledStencilState;	// state to turn off Z buffer
 
+	ID3D11BlendState* m_pAlphaBlendEnabled;
+	ID3D11BlendState* m_pAlphaBlendDisabled;
+
 public:
 	Text2D(string filename, ID3D11Device* device, ID3D11DeviceContext* context); // pass in filename of font, device and context
 	~Text2D(void);

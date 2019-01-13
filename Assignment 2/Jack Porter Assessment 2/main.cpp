@@ -61,12 +61,13 @@ XMVECTOR g_directional_light_colour;
 XMVECTOR g_ambient_light_colour;
 
 SkyBox* g_pSkyBox;
-ParticleSystem* g_pParticleSystem;
+//ParticleSystem* g_pParticleSystem;
 Input* g_pInput;
 
 Text2D * g_p2DText;
 
 std::vector<GameObject*>* g_pGameObjectList;
+std::vector<GameObject*>* g_pEnvironmentList;
 
 
 bool g_snow = false;
@@ -382,7 +383,7 @@ HRESULT InitialiseD3D()
 
 	g_pImmediateContext->RSSetViewports(1, &viewport);
 
-	g_p2DText = new Text2D("assets/font1.bmp", g_pD3DDevice, g_pImmediateContext);
+	g_p2DText = new Text2D("assets/font1.png", g_pD3DDevice, g_pImmediateContext);
 
 	return S_OK;
 }
@@ -414,54 +415,65 @@ HRESULT InitialiseGraphics()
 
 	ModelManager::Instance()->SetUpDevice(g_pD3DDevice, g_pImmediateContext);
 
-	g_pCamera = new Camera(0.0f, 0.0f, -0.5f, 0.0f);
+	g_pCamera = new Camera(0.0f, 50.0f, -100.0f, 0.0f);
 
 	g_pGameObjectList = new std::vector<GameObject*>();
-	GameObject* player = new GameObject(g_pGameObjectList);
+	g_pEnvironmentList = new std::vector<GameObject*>();
+
+	GameObject* player = new GameObject(g_pGameObjectList, g_pEnvironmentList);
 	Player* playerInput = new Player(g_pInput, g_pCamera);
 	g_pCamera->SetUpPlayerFollow(playerInput, 50, 75, -45);
 	player->AddComponent(playerInput);
+
 
 	Physics* playerPhysics = new Physics(5, true);
 	player->AddComponent(playerPhysics);
 
 	Model* playerModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
-	playerModel->SetUpModel((char*)"assets/Player.obj", (char*)"assets/texture.bmp");
+	playerModel->SetUpModel((char*)"assets/Player.fbx", (char*)"assets/PlayerTexture.bmp");
 	player->AddComponent(playerModel);
+	player->SetScale(0.25f);
+	player->SetPosition(0, 100, 0);
 
 	g_pGameObjectList->push_back(player);
 
-	GameObject* ball = new GameObject(g_pGameObjectList);
-	Physics* ballPhysics = new Physics(1, true);
+	GameObject* ball = new GameObject(g_pGameObjectList, g_pEnvironmentList);
+	Physics* ballPhysics = new Physics(5, true);
 	ball->AddComponent(ballPhysics);
 	Model* ballModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
 	ballModel->SetUpModel((char*)"assets/sphere.obj", (char*)"assets/texture.bmp");
 	ball->AddComponent(ballModel);
-	ball->SetPosition(0, 75, 0);
+	ball->SetPosition(-50, 0, 50);
 	ball->SetScale(5);
 	g_pGameObjectList->push_back(ball);
-
-	GameObject* ball2 = new GameObject(g_pGameObjectList);
-	Physics* ballPhysics2 = new Physics(3, true);
-	ball2->AddComponent(ballPhysics2);
-	Model* ballModel2 = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
-	ballModel2->SetUpModel((char*)"assets/Robot.obj", (char*)"assets/RobotTexture.bmp");
-	ball2->AddComponent(ballModel2);
-	ball2->SetPosition(100, 25, 50);
-	ball2->SetScale(0.25);
+	
+	GameObject* robot = new GameObject(g_pGameObjectList, g_pEnvironmentList);
+	Physics* robotPhysics = new Physics(3, true);
+	robot->AddComponent(robotPhysics);
+	Model* robotModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
+	robotModel->SetUpModel((char*)"assets/Robot.obj", (char*)"assets/RobotTexture.bmp");
+	robot->AddComponent(robotModel);
+	robot->SetPosition(100, 50, 50);
+	robot->SetScale(0.25);
 	AI* robotAI = new AI(player);
-	ball2->AddComponent(robotAI);
-	g_pGameObjectList->push_back(ball2);
+	robot->AddComponent(robotAI);
+	g_pGameObjectList->push_back(robot);
 
-	GameObject* cube = new GameObject(g_pGameObjectList);
-	Physics* cubePhysics = new Physics(1, true);
-	cube->AddComponent(cubePhysics);
+	GameObject* cube = new GameObject(g_pGameObjectList, g_pEnvironmentList);
 	Model* cubeModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
-	cubeModel->SetUpModel((char*)"assets/cube.obj", (char*)"assets/texture.bmp");
+	cubeModel->SetUpModel((char*)"assets/Floor.obj", (char*)"assets/texture.bmp");
 	cube->AddComponent(cubeModel);
-	cube->SetPosition(25, 0, 25);
-	cube->SetScale(5);
-	g_pGameObjectList->push_back(cube);
+	cube->SetPosition(0, -25, 0);
+	cube->SetScale(10);
+	g_pEnvironmentList->push_back(cube);
+
+	GameObject* box = new GameObject(g_pGameObjectList, g_pEnvironmentList);
+	Model* boxModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
+	boxModel->SetUpModel((char*)"assets/cube.obj", (char*)"assets/texture.bmp");
+	box->AddComponent(boxModel);
+	box->SetPosition(25, 0, 0);
+	box->SetScale(15);
+	g_pEnvironmentList->push_back(box);
 
 	HRESULT hr = S_OK;
 
@@ -481,8 +493,8 @@ HRESULT InitialiseGraphics()
 	g_pSkyBox = new SkyBox(g_pD3DDevice, g_pImmediateContext, g_pCamera);
 	g_pSkyBox->SetUp((char*)"assets/skybox02.dds");
 
-	g_pParticleSystem = new ParticleSystem(g_pD3DDevice, g_pImmediateContext);
-	g_pParticleSystem->CreateParticle();
+	ParticleSystem::Instance()->SetUpParticleSystem(g_pD3DDevice, g_pImmediateContext);
+	ParticleSystem::Instance()->CreateParticle();
 	return S_OK;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -502,7 +514,7 @@ void RenderFrame(void)
 	}
 	if (g_pInput->KeyIsPressed(DIK_O))
 	{
-		g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::FOUNTAIN, XMVectorZero(), XMVectorZero());
+		ParticleSystem::Instance()->LoadEffect(PARTICLE_EFFECT_TYPE::FOUNTAIN, XMVectorZero(), XMVectorZero());
 	}
 	if (g_pInput->KeyIsPressed(DIK_I))
 	{
@@ -510,7 +522,7 @@ void RenderFrame(void)
 	}
 	if (g_snow)
 	{
-		g_pParticleSystem->LoadEffect(PARTICLE_EFFECT_TYPE::SNOW, g_pCamera->GetPosition(), g_pCamera->GetForward());
+		ParticleSystem::Instance()->LoadEffect(PARTICLE_EFFECT_TYPE::SNOW, g_pCamera->GetPosition(), g_pCamera->GetForward());
 	}
 
 
@@ -537,11 +549,24 @@ void RenderFrame(void)
 
 	g_p2DText->RenderText();
 
+	for (int i = 0; i < g_pEnvironmentList->size(); i++)
+	{
+		g_pEnvironmentList->at(i)->Update(&world, &view, &projection);
+
+	}
+
 	for (int i = 0; i < g_pGameObjectList->size(); i++)
 	{
 		g_pGameObjectList->at(i)->Update(&world, &view, &projection);
+		if (g_pGameObjectList->at(i)->HasComponent<Player>())
+		{
+			if (g_pGameObjectList->at(i)->GetComponent<Player>()->GetHealth() <= 0)
+			{
+				DestroyWindow(g_hWnd);
+			}
+		}
 	}
-	g_pParticleSystem->Draw(&view, &projection, camPos);
+	ParticleSystem::Instance()->Draw(&view, &projection, camPos);
 
 	// Display what has just been rendered
 	g_pSwapChain->Present(0, 0);

@@ -24,6 +24,7 @@ private:
 	std::vector<GameObject*> m_children;
 
 	std::vector<GameObject*>* m_pGameObjectList;
+	std::vector<GameObject*>* m_pEnvironmentList;
 
 	XMVECTOR					m_position;
 	XMVECTOR					m_rotation;
@@ -34,7 +35,7 @@ private:
 public:
 
 	GameObject();
-	GameObject(std::vector<GameObject*>* entityList);
+	GameObject(std::vector<GameObject*>* gameObjectList, std::vector<GameObject*>* environmentList);
 	~GameObject();
 
 	void Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection);
@@ -50,6 +51,7 @@ public:
 	XMVECTOR GetVelocity();
 	XMVECTOR GetForces();
 	std::vector<GameObject*>* GetGameObjectList();
+	std::vector<GameObject*>* GetEnvironmentList();
 
 	void SetPosition(float x, float y, float z);
 	void SetRotation(float x, float y, float z);

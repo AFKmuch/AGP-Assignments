@@ -97,6 +97,34 @@ Text2D::Text2D(string filename, ID3D11Device* device, ID3D11DeviceContext* conte
 	depthStencilDesc.DepthEnable = true;
 	hr = device->CreateDepthStencilState(&depthStencilDesc, &pDepthEnabledStencilState);
 	if(FAILED(hr)) exit(0);
+
+	D3D11_BLEND_DESC b;
+	b.RenderTarget[0].BlendEnable = FALSE;
+	b.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	b.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	b.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	b.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	b.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	b.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	b.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	b.IndependentBlendEnable = TRUE;
+	b.AlphaToCoverageEnable = TRUE;
+
+	pD3DDevice->CreateBlendState(&b, &m_pAlphaBlendDisabled);
+
+	D3D11_BLEND_DESC c;
+	c.RenderTarget[0].BlendEnable = TRUE;
+	c.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	c.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	c.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	c.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	c.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	c.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	c.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	c.IndependentBlendEnable = FALSE;
+	c.AlphaToCoverageEnable = FALSE;
+
+	pD3DDevice->CreateBlendState(&c, &m_pAlphaBlendEnabled);
 }
 
 // add a string with position and size to the list
@@ -223,17 +251,21 @@ void Text2D::RenderText(void)
 
 	// turn off Z buffer so text always on top
 	pImmediateContext->OMSetDepthStencilState(pDepthDisabledStencilState, 1);
-
+	pImmediateContext->OMSetBlendState(m_pAlphaBlendEnabled, 0, 0xffffffff);
 	// draw all added characters
 	pImmediateContext->Draw(current_char*6, 0);
 
 	// turn on Z buffer so other rendering can use it
 	pImmediateContext->OMSetDepthStencilState(pDepthEnabledStencilState, 1);
+	pImmediateContext->OMSetBlendState(m_pAlphaBlendDisabled, 0, 0xffffffff);
+
 }
 
 
 Text2D::~Text2D(void)
 {
+	if (m_pAlphaBlendDisabled) m_pAlphaBlendDisabled->Release();
+	if (m_pAlphaBlendEnabled) m_pAlphaBlendEnabled->Release();
 	if(pDepthDisabledStencilState) pDepthDisabledStencilState->Release();
 	if(pDepthEnabledStencilState) pDepthEnabledStencilState->Release();
 	if(pTexture) pTexture->Release();

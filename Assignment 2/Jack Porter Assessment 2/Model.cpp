@@ -202,6 +202,9 @@ void Model::CalculateModelCentrePoint()
 	float distanceY = abs(minY) + abs(maxY);
 	float distanceZ = abs(minZ) + abs(maxZ);
 
+	m_boundingBoxMin = XMVectorSet(minX, minY, minZ, 0);
+	m_boundingBoxMax = XMVectorSet(maxX, maxY, maxZ, 0);
+
 	m_boundingWidth = distanceZ / 2;
 	m_boundingHeight = distanceY - (m_boundingWidth * 2);
 
@@ -273,6 +276,16 @@ float Model::GetCapsuleRadius(XMVECTOR scale)
 XMVECTOR Model::GetModelCentre(XMVECTOR scale)
 {
 	return m_boundingSphereCentre * scale;
+}
+
+XMVECTOR Model::GetBoundingBoxMax(XMVECTOR scale)
+{
+	return m_boundingBoxMax * scale;
+}
+
+XMVECTOR Model::GetBoundingBoxMin(XMVECTOR scale)
+{
+	return m_boundingBoxMin * scale;
 }
 
 void Model::setDirectionalLight(XMVECTOR direction, XMVECTOR color)

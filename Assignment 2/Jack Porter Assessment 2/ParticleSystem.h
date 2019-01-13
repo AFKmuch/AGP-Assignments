@@ -26,13 +26,21 @@ static enum PARTICLE_EFFECT_TYPE
 
 struct Particle
 {
-	float gravity;
-	XMVECTOR position;
-	XMVECTOR velocity;
-	XMFLOAT4 color;
-	float scale;
-	float maxLife;
-	float currentLife;
+	float						gravity;
+	XMVECTOR					position;
+	XMVECTOR					velocity;
+	XMFLOAT4					color;
+	ID3D11ShaderResourceView*	texture;
+	ID3D11SamplerState*			sampler;
+	float						scale;
+	float						maxLife;
+	float						currentLife;
+};
+
+struct POS_TEX_VERT
+{
+	XMFLOAT3 Position;
+	XMFLOAT2 TexCoord;
 };
 
 class ParticleSystem
@@ -53,25 +61,28 @@ private:
 	ID3D11PixelShader*			m_pPShader;
 	ID3D11InputLayout*			m_pInputLayout;
 	ID3D11Buffer*				m_pConstantBuffer;
-	ID3D11ShaderResourceView*	m_pTexture;
-	ID3D11SamplerState*			m_pSampler;
+	ID3D11BlendState*			m_pAlphaBlendEnabled;
+	ID3D11BlendState*			m_pAlphaBlendDisabled;
 
 	PARTICLE_CONSTANT_BUFFER		m_particle_cb_values;
 
 	std::list<Particle*> m_free;
 	std::list<Particle*> m_active;
 
+	static ParticleSystem*		s_instance;
 public:
 	ParticleSystem();
-	ParticleSystem(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	~ParticleSystem();
+
+	void SetUpParticleSystem(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 
 	HRESULT CreateParticle();
 	HRESULT LoadShader();
 	HRESULT Draw(XMMATRIX* view, XMMATRIX* projection, XMVECTOR* cameraPosition);
 	HRESULT DrawOne(Particle* one, XMMATRIX* view, XMMATRIX* projection, XMVECTOR* cameraPosition);
-	HRESULT AddTexture(char* filename);
+	HRESULT AddTexture(char * filename, Particle* particle);
 	void LoadEffect(PARTICLE_EFFECT_TYPE type, XMVECTOR startPos, XMVECTOR forward);
 	
+	static ParticleSystem* Instance();
 };
 

@@ -31,6 +31,8 @@ private:
 	float						m_boundingSphereRadius;
 	float						m_boundingHeight;
 	float						m_boundingWidth;
+	XMVECTOR					m_boundingBoxMin;
+	XMVECTOR					m_boundingBoxMax;
 
 	XMVECTOR					m_directionalLightVector; 
 	XMVECTOR					m_directionalLightColour; 
@@ -47,12 +49,16 @@ public:
 	void Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection);
 	void CalculateModelCentrePoint();
 	void CalculateBoundingSphereRadius();
+	
 
 	XMVECTOR GetBoundingSphereWorldSpacePosition(XMVECTOR scale, XMVECTOR position, XMVECTOR rotation);
 	float GetBoundingSphereRadius(XMVECTOR scale);
 	float GetCapsuleHeight(XMVECTOR scale);
 	float GetCapsuleRadius(XMVECTOR scale);
 	XMVECTOR GetModelCentre(XMVECTOR scale);
+	XMVECTOR GetBoundingBoxMax(XMVECTOR scale);
+	XMVECTOR GetBoundingBoxMin(XMVECTOR scale);
+
 
 	void setDirectionalLight(XMVECTOR direction, XMVECTOR color);
 	void setAmbientLight(XMVECTOR color);

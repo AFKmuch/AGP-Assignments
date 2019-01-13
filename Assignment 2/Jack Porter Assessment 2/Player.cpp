@@ -2,6 +2,8 @@
 #include "Camera.h"
 #include "Input.h"
 #include "Model.h"
+#include "Physics.h"
+#include "ParticleSystem.h"
 
 Player::Player(Input* input, Camera* camera)
 {
@@ -30,6 +32,7 @@ void Player::Update()
 	float velocityMagnitude = (pow(m_pParent->GetVelocity().x, 2) + pow(m_pParent->GetVelocity().z, 2));
 	if (velocityMagnitude > 0)
 	{
+		ParticleSystem::Instance()->LoadEffect(PARTICLE_EFFECT_TYPE::STREAM, m_pParent->GetPosition(), m_pParent->GetForward());
 		float yAngle = atan2(((m_pParent->GetPosition().x + m_pParent->GetVelocity().x) - m_pParent->GetPosition().x), ((m_pParent->GetPosition().z + m_pParent->GetVelocity().z) - m_pParent->GetPosition().z )) * (180 / XM_PI);
 		if (yAngle < m_pParent->GetRotation().y - 180)
 		{
@@ -52,7 +55,7 @@ void Player::Update()
 		m_pParent->SetRotation(rotation.x, rotation.y, rotation.z);
 	}
 	//Jump
-	if (m_pInput->KeyIsPressed(DIK_SPACE) && m_pParent->GetVelocity().y == 0)
+	if (m_pInput->KeyIsPressed(DIK_SPACE) && m_pParent->GetComponent<Physics>()->GetGrounded())
 	{
 		m_pParent->SetVelocity(m_pParent->GetVelocity().x, m_playerJumpHeight, m_pParent->GetVelocity().z);
 	}
@@ -62,27 +65,26 @@ void Player::Update()
 		switch (m_frameNumber)
 		{
 			case 0:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle00.obj", (char*)"assets/texture.bmp");
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle00.obj", (char*)"assets/texture.bmp");
 				break;
 
 			case 1:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle01.obj", (char*)"assets/texture.bmp");
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle01.obj", (char*)"assets/texture.bmp");
 				break;
 
 			case 2:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle02.obj", (char*)"assets/texture.bmp");
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle02.obj", (char*)"assets/texture.bmp");
 				break;
 
 			case 3:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle03.obj", (char*)"assets/texture.bmp");
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle03.obj", (char*)"assets/texture.bmp");
 				break;
 
 			case 4:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Idle04.obj", (char*)"assets/texture.bmp");
+				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle04.obj", (char*)"assets/texture.bmp");
 				break;
 
 		}
-
 
 		m_frameNumber++;
 		if (m_frameNumber > 4)
@@ -91,11 +93,16 @@ void Player::Update()
 		}
 
 	}
-	m_currentFrameCount += Time::Instance()->DeltaTime();
+	//m_currentFrameCount += Time::Instance()->DeltaTime(); //Disable this for awful animations
 
 }
 
 void Player::ChangeHealth(float change)
 {
 	m_health += change;
+}
+
+float Player::GetHealth()
+{
+	return m_health;
 }

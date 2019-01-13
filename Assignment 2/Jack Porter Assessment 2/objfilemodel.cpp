@@ -7,11 +7,598 @@
 // draw object
 void ObjFileModel::Draw(void)
 {
-	UINT stride = sizeof(MODEL_POS_TEX_NORM_VERTEX);
+	if(m_hasAnimation)
+	{
+		//for (int i = 0; i < numverts; i++)
+		//{
+		//	//vertices[i].Pos.x = m_vertices[i].position.x;
+		//	//vertices[i].Pos.y = m_vertices[i].position.y;
+		//	//vertices[i].Pos.z = m_vertices[i].position.z;
+		//
+		//	for (int j = 0; j < vertices[i].vertexBlendingInfos.size(); j++)
+		//	{
+		//		vertices[i].Pos.x += 
+		//	}
+		//}
+	}
+
+	UINT stride = sizeof(MODEL_POS_TEX_NORM_BLEND_VERTEX);
 	UINT offset = 0;
 	pImmediateContext->IASetVertexBuffers(0, 1, &pVertexBuffer, &stride, &offset);
 	pImmediateContext->Draw(numverts, 0);
+
 }
+
+HRESULT ObjFileModel::LoadFBX(char* fileName)
+{
+	if (m_pFBXManager == nullptr)
+	{
+		m_pFBXManager = FbxManager::Create();
+
+		FbxIOSettings* IOSettings = FbxIOSettings::Create(m_pFBXManager, IOSROOT);
+		m_pFBXManager->SetIOSettings(IOSettings);
+	}
+
+	FbxImporter* importer = FbxImporter::Create(m_pFBXManager, "");
+	m_FBXScene = FbxScene::Create(m_pFBXManager, "");
+
+	bool success = importer->Initialize(fileName, -1, m_pFBXManager->GetIOSettings());
+	if (!success)
+	{
+		return E_FAIL;
+	}
+
+	success = importer->Import(m_FBXScene);
+	if (!success)
+	{
+		return E_FAIL;
+	}
+
+	importer->Destroy();
+	FbxNode* FBXRootNode = m_FBXScene->GetRootNode();
+
+	if (FBXRootNode)
+	{
+		m_FBX = true;
+		//for (int i = 0; i < FBXRootNode->GetChildCount(); i++)
+		//{
+		//	FbxNode* FBXChildNode = FBXRootNode->GetChild(i);
+		//
+		//	if (FBXChildNode->GetNodeAttribute() == NULL)
+		//	{
+		//		continue;
+		//	}
+		//
+		//	FbxNodeAttribute::EType attributeType = FBXChildNode->GetNodeAttribute()->GetAttributeType();
+		//
+		//	if (attributeType != FbxNodeAttribute::eMesh)
+		//	{
+		//		continue;
+		//	}
+		//
+		//	FbxMesh* mesh = (FbxMesh*)FBXChildNode->GetNodeAttribute();
+		//
+		//	FbxVector4* currentVertices = mesh->GetControlPoints();
+		//
+		//	for (int j = 0; j < mesh->GetPolygonCount(); j++)
+		//	{
+		//		int numVerts = mesh->GetPolygonSize(j);
+		//
+		//		if (numVerts != 3);
+		//		{
+		//			//return E_FAIL;
+		//		}
+		//
+		//		for (int k = 0; k < numVerts; k++)
+		//		{
+		//			int controlPointIndex = mesh->GetPolygonVertex(j, k);
+		//
+		//			ControlPoint* currentControlPoint = m_controlPoints[controlPointIndex];
+		//
+		//			xyz vertex;
+		//			vertex.x = (float)currentVertices[controlPointIndex].mData[0];
+		//			vertex.y = (float)currentVertices[controlPointIndex].mData[1];
+		//			vertex.z = (float)currentVertices[controlPointIndex].mData[2];
+		//
+		//			pindices.push_back(j + k);
+		//			position_list.push_back(vertex);
+		//
+		//			FbxVector4 FBXnormal;
+		//			mesh->GetPolygonVertexNormal(j, k, FBXnormal);
+		//
+		//			xyz normal;
+		//			normal.x = (float)FBXnormal[0];
+		//			normal.y = (float)FBXnormal[1];
+		//			normal.z = (float)FBXnormal[2];
+		//
+		//			nindices.push_back(j + k);
+		//			normal_list.push_back(normal);
+		//
+		//			FbxVector2 FBXuv;
+		//			FbxStringList uvList;
+		//			mesh->GetUVSetNames(uvList);
+		//			bool mapped;
+		//			mesh->GetPolygonVertexUV(j, k, uvList[0], FBXuv, mapped);
+		//
+		//			xy uv;
+		//			uv.x = (float)FBXuv[0];
+		//			uv.y = (float)FBXuv[1];
+		//
+		//			tindices.push_back(j + k);
+		//			texcoord_list.push_back(uv);
+		//		}
+		//	}
+		//}
+		
+		ProcessSkeleton(FBXRootNode);
+		if (m_skeleton.joints.empty())
+		{
+			m_hasAnimation = false;
+		}
+		else
+		{
+			m_hasAnimation = true;
+		}
+		ProcessGeometry(FBXRootNode);
+	}
+
+	// create vertex array to pass to vertex buffer from parsed data
+	numverts = m_triangleCount * 3;
+
+	vertices = new MODEL_POS_TEX_NORM_BLEND_VERTEX[numverts]; // create big enough vertex array
+
+	//for (unsigned int i = 0; i< numverts; i++)
+	//{
+	//
+	//	// set position data
+	//	vertices[i].Pos.x = position_list[i].x;
+	//	vertices[i].Pos.y = position_list[i].y;
+	//	vertices[i].Pos.z = position_list[i].z;
+	//
+	//	// set texture coord data
+	//	vertices[i].TexCoord.x = texcoord_list[i].x;
+	//	vertices[i].TexCoord.y = texcoord_list[i].y;
+	//
+	//	// set normal data
+	//	vertices[i].Normal.x = normal_list[i].x;
+	//	vertices[i].Normal.y = normal_list[i].y;
+	//	vertices[i].Normal.z = normal_list[i].z;
+	//
+	//}
+
+	for (unsigned int i = 0; i< numverts; i++)
+	{
+	
+		// set position data
+		vertices[i].Pos.x = m_vertices[i].position.x;
+		vertices[i].Pos.y = m_vertices[i].position.y;
+		vertices[i].Pos.z = m_vertices[i].position.z;
+	
+		// set texture coord data
+		vertices[i].TexCoord.x = m_vertices[i].UV.x;
+		vertices[i].TexCoord.y = m_vertices[i].UV.y;
+	
+		// set normal data
+		vertices[i].Normal.x = m_vertices[i].normal.x;
+		vertices[i].Normal.y = m_vertices[i].normal.y;
+		vertices[i].Normal.z = m_vertices[i].normal.z;
+	
+		vertices[i].vertexBlendingInfos = m_vertices[i].vertexBlendingInfos;
+	}
+
+	// Set up and create vertex buffer
+	D3D11_BUFFER_DESC bufferDesc;
+	ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;										// Used by CPU and GPU
+	bufferDesc.ByteWidth = sizeof(vertices[0])*numverts;						// Total size of buffer
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;							// Use as a vertex buffer
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;							// Allow CPU access
+	HRESULT hr = pD3DDevice->CreateBuffer(&bufferDesc, NULL, &pVertexBuffer);	// Create the buffer
+
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	// Copy the vertices into the buffer
+	D3D11_MAPPED_SUBRESOURCE ms;
+	pImmediateContext->Map(pVertexBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);	// Lock the buffer to allow writing
+	memcpy(ms.pData, vertices, sizeof(vertices[0])*numverts);							// Copy the data
+	pImmediateContext->Unmap(pVertexBuffer, NULL);										// Unlock the buffer
+
+	return S_OK;
+}
+
+void ObjFileModel::ProcessSkeleton(FbxNode * rootNode)
+{
+	for (int childIndex = 0; childIndex < rootNode->GetChildCount(); childIndex++)
+	{
+		FbxNode* currentNode = rootNode->GetChild(childIndex);
+		ProcessSkeletonHierarchy(currentNode, 0, 0, -1);
+	}
+}
+
+void ObjFileModel::ProcessSkeletonHierarchy(FbxNode * node, int depth, int myIndex, int parentIndex)
+{
+	if (node->GetNodeAttribute() && node->GetNodeAttribute()->GetAttributeType() && node->GetNodeAttribute()->GetAttributeType() == FbxNodeAttribute::eSkeleton)
+	{
+		Joint currentBone;
+		currentBone.parentIndex = parentIndex;
+		currentBone.name = node->GetName();
+		m_skeleton.joints.push_back(currentBone);
+	}
+	for (int i = 0; i < node->GetChildCount(); i++)
+	{
+		ProcessSkeletonHierarchy(node->GetChild(i), depth + 1, m_skeleton.joints.size(), myIndex);
+	}
+}
+
+void ObjFileModel::ProcessJointsAndAnimations(FbxNode * node)
+{
+
+	FbxMesh* currentMesh = (FbxMesh*)node->GetNodeAttribute();
+	unsigned int numOfDeformers = currentMesh->GetDeformerCount();
+
+	FbxAMatrix geometryTransform = GetGeometryTransformation(node);
+	int count = 0;
+	for (unsigned int deformerIndex = 0; deformerIndex < numOfDeformers; ++deformerIndex)
+	{
+		FbxSkin* currentSkin = reinterpret_cast<FbxSkin*>(currentMesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
+		if (!currentSkin)
+		{
+			continue;
+		}
+
+		unsigned int numOfClusters = currentSkin->GetClusterCount();
+		for (unsigned int clusterIndex = 0; clusterIndex < numOfClusters; clusterIndex++)
+		{
+			FbxCluster* currentCluster = currentSkin->GetCluster(clusterIndex);
+			string currentJointName = currentCluster->GetLink()->GetName();
+			unsigned int currentJointIndex = FindJointIndexUsingName(currentJointName);
+			FbxAMatrix transformMatrix;
+			FbxAMatrix transformLinkMatrix;
+			FbxAMatrix globalBlindposeInverseMatrix;
+
+			currentCluster->GetTransformMatrix(transformMatrix);
+			currentCluster->GetTransformLinkMatrix(transformLinkMatrix);
+			globalBlindposeInverseMatrix = transformLinkMatrix.Inverse() * transformMatrix * geometryTransform;
+
+			m_skeleton.joints[currentJointIndex].globalBlindposeInverse = globalBlindposeInverseMatrix;
+			m_skeleton.joints[currentJointIndex].node = currentCluster->GetLink();
+
+			unsigned int numOfIndices = currentCluster->GetControlPointIndicesCount();
+			for (unsigned int i = 0; i < numOfIndices; i++)
+			{
+				BlendingIndexWeightPair currentBlendingIndexWeightPair;
+				currentBlendingIndexWeightPair.blendingIndex = currentJointIndex;
+				currentBlendingIndexWeightPair.blendingWeight = *currentCluster->GetControlPointWeights();
+				int currentPoint = currentCluster->GetControlPointIndices()[i];
+				m_controlPoints[currentPoint]->blendingInfo.push_back(currentBlendingIndexWeightPair);
+				count++;
+			}
+
+			FbxAnimStack* currentAnimStack = m_FBXScene->GetSrcObject<FbxAnimStack>(0);
+			FbxString animStackName = currentAnimStack->GetName();
+			m_animationName = animStackName.Buffer();
+			FbxTakeInfo* takeInfo = m_FBXScene->GetTakeInfo(animStackName);
+			FbxTime start = takeInfo->mLocalTimeSpan.GetStart();
+			FbxTime end = takeInfo->mLocalTimeSpan.GetStop();
+			m_animationLength = end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1;
+			Keyframe** currentAnimation = &m_skeleton.joints[currentJointIndex].animation;
+
+			for (FbxLongLong i = start.GetFrameCount(FbxTime::eFrames24); i < end.GetFrameCount(FbxTime::eFrames24); i++)
+			{
+				FbxTime currentTime;
+				currentTime.SetFrame(i, FbxTime::eFrames24);
+				*currentAnimation = new Keyframe();
+				(*currentAnimation)->frameNumber = i;
+				FbxAMatrix currentTransformOffset = node->EvaluateGlobalTransform(currentTime) * geometryTransform;
+				(*currentAnimation)->globalTransform = currentTransformOffset.Inverse() * currentCluster->GetLink()->EvaluateGlobalTransform(currentTime);
+				currentAnimation = &((*currentAnimation)->next);
+			}
+		}
+	}
+
+	BlendingIndexWeightPair currentBlendingIndexWeightPair;
+	currentBlendingIndexWeightPair.blendingIndex = 0;
+	currentBlendingIndexWeightPair.blendingWeight = 0;
+	for (auto itr = m_controlPoints.begin(); itr != m_controlPoints.end(); ++itr)
+	{
+		for (unsigned int i = itr->second->blendingInfo.size(); i <= 4; ++i)
+		{
+			itr->second->blendingInfo.push_back(currentBlendingIndexWeightPair);
+		}
+	}
+
+}
+
+FbxAMatrix ObjFileModel::GetGeometryTransformation(FbxNode * node)
+{
+	if (!node)
+	{
+		throw exception("Null for mesh geometry");
+	}
+
+	const FbxVector4 lT = node->GetGeometricTranslation(FbxNode::eSourcePivot);
+	const FbxVector4 lR = node->GetGeometricRotation(FbxNode::eSourcePivot);
+	const FbxVector4 lS = node->GetGeometricScaling(FbxNode::eSourcePivot);
+
+	return FbxAMatrix(lT, lR, lS);
+}
+
+unsigned int ObjFileModel::FindJointIndexUsingName(const string & JointName)
+{
+	for (unsigned int i = 0; i < m_skeleton.joints.size(); i++)
+	{
+		if (m_skeleton.joints[i].name == JointName)
+		{
+			return i;
+		}
+	}
+
+	throw std::exception("Skeleton information in FBX file is corrupted.");
+}
+
+bool ObjFileModel::EndsWith(const std::string & mainString, const std::string & toMatch)
+{
+	if (mainString.size() > toMatch.size() && mainString.compare(mainString.size() - toMatch.size(), toMatch.size(), toMatch) == 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void ObjFileModel::ProcessGeometry(FbxNode * node)
+{
+	if (node->GetNodeAttribute() != NULL)
+	{
+		switch (node->GetNodeAttribute()->GetAttributeType())
+		{
+		case FbxNodeAttribute::eMesh:
+			ProcessControlPoints(node);
+			if (m_hasAnimation)
+			{
+				ProcessJointsAndAnimations(node);
+			}
+			ProcessMesh(node);
+			break;
+		}
+	}
+
+	for (int i = 0; i < node->GetChildCount(); ++i)
+	{
+		ProcessGeometry(node->GetChild(i));
+	}
+}
+
+void ObjFileModel::ProcessMesh(FbxNode * node)
+{
+	FbxMesh* currentMesh = node->GetMesh();
+	
+	m_triangleCount = currentMesh->GetPolygonCount();
+	int vertexCounter = 0;
+	m_triangles.reserve(m_triangleCount);
+	
+	for (unsigned int i = 0; i < m_triangleCount; ++i)
+	{
+		XMFLOAT3 normal[3];
+		XMFLOAT3 tangent[3];
+		XMFLOAT3 binormal[3];
+		XMFLOAT2 UV[3][2];
+		Triangle currentTriangle;
+		m_triangles.push_back(currentTriangle);
+	
+		for (unsigned int j = 0; j < 3; ++j)
+		{
+			int controlPointIndex = currentMesh->GetPolygonVertex(i, j);
+			ControlPoint* currentControlPoint = m_controlPoints[controlPointIndex];
+	
+			ReadNormals(currentMesh, controlPointIndex, vertexCounter, normal[j]);
+			// We only have diffuse texture
+			for (int k = 0; k < 1; ++k)
+			{
+				ReadUV(currentMesh, controlPointIndex, currentMesh->GetTextureUVIndex(i, j), k, UV[j][k]);
+			}
+	
+	
+			PNTIWVertex temp;
+			temp.position = currentControlPoint->position;			
+			temp.normal = normal[j];
+			temp.UV = UV[j][0];
+			// Copy the blending info from each control point
+			for (unsigned int i = 0; i < currentControlPoint->blendingInfo.size(); ++i)
+			{
+				VertexBlendingInfo currBlendingInfo;
+				currBlendingInfo.blendingIndex = currentControlPoint->blendingInfo[i].blendingIndex;
+				currBlendingInfo.blendingWeight = currentControlPoint->blendingInfo[i].blendingWeight;
+				temp.vertexBlendingInfos.push_back(currBlendingInfo);
+			}
+			// Sort the blending info so that later we can remove
+			// duplicated vertices
+			temp.SortBlendingInfoByWeight();
+	
+			m_vertices.push_back(temp);
+			m_triangles.back().indices.push_back(vertexCounter);
+			++vertexCounter;
+		}
+	}
+}
+
+void ObjFileModel::ProcessControlPoints(FbxNode * node)
+{
+	FbxMesh* currentMesh = node->GetMesh();
+	unsigned int ctrlPointCount = currentMesh->GetControlPointsCount();
+	for (unsigned int i = 0; i < ctrlPointCount; ++i)
+	{
+		ControlPoint* currentControlPoint = new ControlPoint();
+		XMFLOAT3 currentPosition;
+		currentPosition.x = static_cast<float>(currentMesh->GetControlPointAt(i).mData[0]);
+		currentPosition.y = static_cast<float>(currentMesh->GetControlPointAt(i).mData[1]);
+		currentPosition.z = static_cast<float>(currentMesh->GetControlPointAt(i).mData[2]);
+		currentControlPoint->position = currentPosition;
+		m_controlPoints[i] = currentControlPoint;
+	}
+}
+
+void ObjFileModel::ReadNormals(FbxMesh * mesh, int controlPointIndex, int vertexCounter, XMFLOAT3 & normal)
+{
+	if (mesh->GetElementNormalCount() < 1)
+	{
+		throw std::exception("Invalid Normal Number");
+	}
+
+	FbxGeometryElementNormal* vertexNormal = mesh->GetElementNormal(0);
+	switch (vertexNormal->GetMappingMode())
+	{
+	case FbxGeometryElement::eByControlPoint:
+		switch (vertexNormal->GetReferenceMode())
+		{
+		case FbxGeometryElement::eDirect:
+		{
+			normal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[0]);
+			normal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[1]);
+			normal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(controlPointIndex).mData[2]);
+		}
+		break;
+
+		case FbxGeometryElement::eIndexToDirect:
+		{
+			int index = vertexNormal->GetIndexArray().GetAt(controlPointIndex);
+			normal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
+			normal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
+			normal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
+		}
+		break;
+
+		default:
+			throw std::exception("Invalid Reference");
+		}
+		break;
+
+	case FbxGeometryElement::eByPolygonVertex:
+		switch (vertexNormal->GetReferenceMode())
+		{
+		case FbxGeometryElement::eDirect:
+		{
+			normal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexCounter).mData[0]);
+			normal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexCounter).mData[1]);
+			normal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(vertexCounter).mData[2]);
+		}
+		break;
+
+		case FbxGeometryElement::eIndexToDirect:
+		{
+			int index = vertexNormal->GetIndexArray().GetAt(vertexCounter);
+			normal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
+			normal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
+			normal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
+		}
+		break;
+
+		default:
+			throw std::exception("Invalid Reference");
+		}
+		break;
+	}
+}
+
+void ObjFileModel::ReadUV(FbxMesh * mesh, int controlPointIndex, int textureUVIndex, int UVLayer, XMFLOAT2 & UV)
+{
+	if (UVLayer >= 2 || mesh->GetElementUVCount() <= UVLayer)
+	{
+		throw std::exception("Invalid UV Layer Number");
+	}
+	FbxGeometryElementUV* vertexUV = mesh->GetElementUV(UVLayer);
+
+	switch (vertexUV->GetMappingMode())
+	{
+	case FbxGeometryElement::eByControlPoint:
+		switch (vertexUV->GetReferenceMode())
+		{
+		case FbxGeometryElement::eDirect:
+		{
+			UV.x = static_cast<float>(vertexUV->GetDirectArray().GetAt(controlPointIndex).mData[0]);
+			UV.y = static_cast<float>(vertexUV->GetDirectArray().GetAt(controlPointIndex).mData[1]);
+		}
+		break;
+
+		case FbxGeometryElement::eIndexToDirect:
+		{
+			int index = vertexUV->GetIndexArray().GetAt(controlPointIndex);
+			UV.x = static_cast<float>(vertexUV->GetDirectArray().GetAt(index).mData[0]);
+			UV.y = static_cast<float>(vertexUV->GetDirectArray().GetAt(index).mData[1]);
+		}
+		break;
+
+		default:
+			throw std::exception("Invalid Reference");
+		}
+		break;
+
+	case FbxGeometryElement::eByPolygonVertex:
+		switch (vertexUV->GetReferenceMode())
+		{
+		case FbxGeometryElement::eDirect:
+		case FbxGeometryElement::eIndexToDirect:
+		{
+			UV.x = static_cast<float>(vertexUV->GetDirectArray().GetAt(textureUVIndex).mData[0]);
+			UV.y = static_cast<float>(vertexUV->GetDirectArray().GetAt(textureUVIndex).mData[1]);
+		}
+		break;
+
+		default:
+			throw std::exception("Invalid Reference");
+		}
+		break;
+	}
+}
+
+void ObjFileModel::CalculateToRootMatrix(Bone* bone, XMMATRIX parentMatrix)
+{
+	bone->toRoot = bone->toParent * parentMatrix;
+	for (int i = 0; i < bone->children.size(); i++)
+	{
+		CalculateToRootMatrix(bone->children[i], bone->toRoot);
+	}
+}
+
+ObjFileModel::Bone * ObjFileModel::FindBone(Bone * bone, string boneName)
+{
+	Bone* temporaryBone;
+	if (bone->name == boneName)
+	{
+		return bone;
+	}
+	else
+	{
+		for (int i = 0; i < bone->children.size(); i++)
+		{
+			temporaryBone = bone->children[i];
+			if (temporaryBone->name == boneName)
+			{
+				return temporaryBone;
+			}
+		}
+	}
+	return nullptr;
+}
+
+void ObjFileModel::CalculateOffsetMatrix(int boneIndex)
+{
+	string boneName = m_skin.bones[boneIndex]->name;
+
+	Bone* bone = FindBone(m_skin.bones[0], boneName);
+	if (bone != nullptr)
+	{
+		XMVECTOR determinant = XMMatrixDeterminant(bone->toRoot);
+		m_offsetMatrix[boneIndex] = m_meshBone.toRoot * XMMatrixInverse(&determinant, bone->toRoot);
+	}
+}
+
+
 
 
 // load object from obj file in constructor
@@ -27,11 +614,21 @@ ObjFileModel::ObjFileModel(char* fname, ID3D11Device* device, ID3D11DeviceContex
 		return;
 	}
 
+	
+	
 	filename = fname;
 
-	parsefile();
+	if (EndsWith(filename, ".fbx"))
+	{
+		LoadFBX(fname);
+	}
+	else
+	{
+		parsefile();
+		createVB();
+	}
 
-	createVB();
+
 
 	delete[] fbuffer; // delete file buffer created in loadfile()
 }
@@ -223,7 +820,7 @@ bool ObjFileModel::createVB()
 	// create vertex array to pass to vertex buffer from parsed data
 	numverts = pindices.size();
 
-	vertices = new MODEL_POS_TEX_NORM_VERTEX[numverts]; // create big enough vertex array
+	vertices = new MODEL_POS_TEX_NORM_BLEND_VERTEX[numverts]; // create big enough vertex array
 
 	for(unsigned int i = 0; i< numverts; i++)
 	{
