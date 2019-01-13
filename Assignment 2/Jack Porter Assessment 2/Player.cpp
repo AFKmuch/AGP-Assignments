@@ -10,6 +10,11 @@ Player::Player(Input* input, Camera* camera)
 	m_pInput = input;
 	m_pCamera = camera;
 	m_health = m_maxHealth;
+	m_idleAnim.push_back((char*)"assets/Animation/Idle/Idle00.obj");
+	m_idleAnim.push_back((char*)"assets/Animation/Idle/Idle01.obj");
+	m_idleAnim.push_back((char*)"assets/Animation/Idle/Idle02.obj");
+	m_idleAnim.push_back((char*)"assets/Animation/Idle/Idle03.obj");
+	m_idleAnim.push_back((char*)"assets/Animation/Idle/Idle04.obj");
 }
 
 
@@ -62,29 +67,8 @@ void Player::Update()
 	if (m_currentFrameCount >= m_frameUpdateCount)
 	{
 		m_currentFrameCount = 0;
-		switch (m_frameNumber)
-		{
-			case 0:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle00.obj", (char*)"assets/texture.bmp");
-				break;
 
-			case 1:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle01.obj", (char*)"assets/texture.bmp");
-				break;
-
-			case 2:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle02.obj", (char*)"assets/texture.bmp");
-				break;
-
-			case 3:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle03.obj", (char*)"assets/texture.bmp");
-				break;
-
-			case 4:
-				m_pParent->GetComponent<Model>()->SetUpModel((char*)"assets/Animation/Idle/Idle04.obj", (char*)"assets/texture.bmp");
-				break;
-
-		}
+		m_pParent->GetComponent<Model>()->SetUpModel(m_idleAnim[m_frameNumber], (char*)"assets/texture.bmp");
 
 		m_frameNumber++;
 		if (m_frameNumber > 4)
@@ -93,7 +77,7 @@ void Player::Update()
 		}
 
 	}
-	//m_currentFrameCount += Time::Instance()->DeltaTime(); //Disable this for awful animations
+	m_currentFrameCount += Time::Instance()->DeltaTime(); //Disable this for awful animations
 
 }
 
@@ -106,3 +90,13 @@ float Player::GetHealth()
 {
 	return m_health;
 }
+
+void Player::LoadAnims()
+{
+	for (int i = 0; i < m_idleAnim.size(); i++)
+	{
+		m_pParent->GetComponent<Model>()->SetUpModel(m_idleAnim[i], (char*)"assets/texture.bmp");
+	}
+
+}
+

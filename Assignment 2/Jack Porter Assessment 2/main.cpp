@@ -430,10 +430,11 @@ HRESULT InitialiseGraphics()
 	player->AddComponent(playerPhysics);
 
 	Model* playerModel = new Model(g_pD3DDevice, g_pImmediateContext, g_directional_light_shines_from, g_directional_light_colour, g_ambient_light_colour);
-	playerModel->SetUpModel((char*)"assets/Player.fbx", (char*)"assets/PlayerTexture.bmp");
+	//playerModel->SetUpModel((char*)"assets/Player.fbx", (char*)"assets/PlayerTexture.bmp");
 	player->AddComponent(playerModel);
-	player->SetScale(0.25f);
+	player->SetScale(1);
 	player->SetPosition(0, 100, 0);
+	playerInput->LoadAnims();
 
 	g_pGameObjectList->push_back(player);
 

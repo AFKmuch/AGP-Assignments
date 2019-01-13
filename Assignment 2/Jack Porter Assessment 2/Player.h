@@ -21,11 +21,15 @@ private:
 	float m_currentFrameCount = 0;
 	float m_maxHealth = 100;
 	float m_health;
+	std::vector<char*> m_idleAnim;
+
 public:
 	Player(Input* input, Camera* camera);
 	~Player();
 	void Update();
 	void ChangeHealth(float change);
 	float GetHealth();
+	void LoadAnims();
 };
+
 
