@@ -3,13 +3,16 @@
 #include "Component.h"
 
 
+class Camera;
+
 struct MODEL_CONSTANT_BUFFER
 {
 	XMMATRIX WorldViewProjection; // 64 Bytes
 	XMVECTOR directional_light_vector; // 16
 	XMVECTOR directional_light_colour; // 16
 	XMVECTOR ambient_light_colour; // 16
-}; // 112 bytes
+	XMVECTOR camera_position; // 16
+}; // 128 bytes
 
 class Model : public Component
 {
@@ -37,7 +40,8 @@ private:
 	XMVECTOR					m_directionalLightVector; 
 	XMVECTOR					m_directionalLightColour; 
 	XMVECTOR					m_ambientLightColour; 
-
+	
+	Camera*						m_pCamera;
 public:
 	Model();
 	Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMVECTOR directionVector, XMVECTOR directionColor, XMVECTOR ambientColor);

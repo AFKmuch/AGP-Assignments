@@ -30,6 +30,7 @@ public:
 	void ChangeHealth(float change);
 	float GetHealth();
 	void LoadAnims();
+	Camera* GetCamera();
 };
 
 

@@ -1,4 +1,6 @@
 #include "Model.h"
+#include "Camera.h"
+#include "Player.h"
 
 Model::Model()
 {
@@ -42,7 +44,7 @@ HRESULT Model::LoadShader(char * filename)
 	ZeroMemory(&constant_buffer_desc, sizeof(constant_buffer_desc));
 
 	constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-	constant_buffer_desc.ByteWidth = 112;
+	constant_buffer_desc.ByteWidth = 128;
 	constant_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 	hr = m_pD3DDevice->CreateBuffer(&constant_buffer_desc, NULL, &m_pConstantBuffer);
@@ -116,6 +118,17 @@ HRESULT Model::LoadShader(char * filename)
 
 HRESULT Model::Draw(XMMATRIX* world, XMMATRIX * view, XMMATRIX * projection)
 {
+	if (!m_pCamera)
+	{
+		for (int i = 0; i < m_pParent->GetGameObjectList()->size(); i++)
+		{
+			if (m_pParent->GetGameObjectList()->at(i)->HasComponent<Player>())
+			{
+				m_pCamera = m_pParent->GetGameObjectList()->at(i)->GetComponent<Player>()->GetCamera();
+				break;
+			}
+		}
+	}
 	XMMATRIX transpose;
 	transpose = XMMatrixTranspose((*world));
 	m_modelCbValues.WorldViewProjection = (*world) * (*view) * (*projection);
@@ -123,6 +136,7 @@ HRESULT Model::Draw(XMMATRIX* world, XMMATRIX * view, XMMATRIX * projection)
 	m_modelCbValues.directional_light_vector = XMVector3Normalize(m_modelCbValues.directional_light_vector);
 	m_modelCbValues.directional_light_colour = m_directionalLightColour;
 	m_modelCbValues.ambient_light_colour = m_ambientLightColour;
+	m_modelCbValues.camera_position = m_pCamera->GetPosition();
 	m_pImmediateContext->UpdateSubresource(m_pConstantBuffer, 0, 0, &m_modelCbValues, 0, 0);
 	m_pImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
 	m_pImmediateContext->VSSetShader(m_pVShader, 0, 0);

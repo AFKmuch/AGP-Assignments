@@ -60,7 +60,7 @@ Object * ModelManager::CreateModel(char * fileName)
 	ZeroMemory(&constant_buffer_desc, sizeof(constant_buffer_desc));
 
 	constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-	constant_buffer_desc.ByteWidth = 112;
+	constant_buffer_desc.ByteWidth = 128;
 	constant_buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 	hr = m_pD3DDevice->CreateBuffer(&constant_buffer_desc, NULL, &newObject->ConstantBuffer);

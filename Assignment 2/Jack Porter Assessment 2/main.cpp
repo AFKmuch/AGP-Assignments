@@ -410,7 +410,7 @@ void ShutdownD3D()
 /////////////////////////////////////////////////////////////////////////////////////////////
 HRESULT InitialiseGraphics()
 {
-	g_directional_light_colour = XMVectorSet(0.9f, 0.9f, 0.9f, 0.0f); // 
+	g_directional_light_colour = XMVectorSet(0.6f, 0.6f, 0.6f, 0.0f); // 
 	g_ambient_light_colour = XMVectorSet(0.05f, 0.05f, 0.25f, 1.0f); // use a small value for ambient
 
 	ModelManager::Instance()->SetUpDevice(g_pD3DDevice, g_pImmediateContext);

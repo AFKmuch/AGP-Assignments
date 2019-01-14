@@ -13,7 +13,6 @@ struct Object
 
 struct TextureStruct
 {
-
 	ID3D11ShaderResourceView*	Texture;
 	ID3D11SamplerState*			Sampler;
 };

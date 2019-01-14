@@ -100,3 +100,8 @@ void Player::LoadAnims()
 
 }
 
+Camera* Player::GetCamera()
+{
+	return m_pCamera;
+}
+
