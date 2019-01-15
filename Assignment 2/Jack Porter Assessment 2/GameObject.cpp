@@ -24,6 +24,39 @@ GameObject::GameObject(std::vector<GameObject*>* gameObjectList, std::vector<Gam
 
 GameObject::~GameObject()
 {
+	if (m_components.size() > 0)
+	{
+		for (int i = m_components.size() - 1; i >= 0; i--)
+		{
+			if (m_components.end()->second)
+			{
+				if (m_components.end()->second) delete m_components.end()->second;			
+			}
+		}
+	}
+	if (m_children.size() > 0)
+	{
+		for (int i = m_children.size() - 1; i >= 0; i--)
+		{
+			if (m_children[i]) delete m_children[i];
+		}
+	}
+	if (m_pGameObjectList->size() > 0)
+	{
+		for (int i = m_pGameObjectList->size() - 1; i >= 0; i--)
+		{
+			if (m_pGameObjectList->at(i)) delete m_pGameObjectList->at(i);
+		}
+	}
+	if (m_pEnvironmentList->size() > 0)
+	{
+		for (int i = m_pEnvironmentList->size() - 1; i >= 0; i--)
+		{
+			if (m_pEnvironmentList->at(i)) delete m_pEnvironmentList->at(i);
+		}
+	}
+	if (m_pGameObjectList) delete m_pGameObjectList;
+	if (m_pEnvironmentList) delete m_pEnvironmentList;
 }
 
 void GameObject::Update(XMMATRIX* world, XMMATRIX* view, XMMATRIX* projection)

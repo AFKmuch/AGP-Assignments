@@ -10,6 +10,7 @@ AI::AI(GameObject* player)
 
 AI::~AI()
 {
+	if (m_pPlayer) delete(m_pPlayer);
 }
 
 void AI::Update()

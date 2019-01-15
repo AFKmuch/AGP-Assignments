@@ -393,7 +393,27 @@ HRESULT InitialiseD3D()
 //////////////////////////////////////////////////////////////////////////////////////
 void ShutdownD3D()
 {
+	if (g_pGameObjectList->size() > 0)
+	{
+		for (int i = g_pGameObjectList->size() - 1; i >= 0; i--)
+		{
+			if (g_pGameObjectList->at(i)) delete g_pGameObjectList->at(i);
+		}
+	}
+	if (g_pEnvironmentList->size() > 0)
+	{
+		for (int i = g_pEnvironmentList->size() - 1; i >= 0; i--)
+		{
+			if (g_pEnvironmentList->at(i)) delete g_pEnvironmentList->at(i);
+		}
+	}
+	if (g_pGameObjectList) delete g_pGameObjectList;
+	if (g_pEnvironmentList) delete g_pEnvironmentList;
+	if (g_p2DText) delete g_p2DText;
+	if (g_pInput) delete g_pInput;
+	if (g_pSkyBox) delete g_pSkyBox;
 	if (g_pCamera) delete g_pCamera;
+	if (g_pZBuffer) g_pZBuffer->Release();
 	if (g_pConstantBuffer0) g_pConstantBuffer0->Release();
 	if (g_pVertexBuffer) g_pVertexBuffer->Release();
 	if (g_pInputLayout) g_pInputLayout->Release();

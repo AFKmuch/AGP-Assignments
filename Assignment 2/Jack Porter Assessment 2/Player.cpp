@@ -20,6 +20,16 @@ Player::Player(Input* input, Camera* camera)
 
 Player::~Player()
 {
+	if (m_idleAnim.size() > 0)
+	{
+		for (int i = m_idleAnim.size() - 1; i >= 0; i--)
+		{
+			if(m_idleAnim[i]) delete m_idleAnim[i];
+		}
+	}
+
+	if (m_pInput) delete m_pInput;
+	if (m_pCamera) delete m_pCamera;
 }
 
 void Player::Update()

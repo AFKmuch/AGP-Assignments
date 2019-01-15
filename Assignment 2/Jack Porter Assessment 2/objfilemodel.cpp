@@ -877,6 +877,33 @@ ObjFileModel::~ObjFileModel()
 {
 	// clean up memory used by object
 	if(pVertexBuffer) pVertexBuffer->Release();
+	if (fbuffer) delete fbuffer;
+	
+	
+	if (m_pFBXManager) m_pFBXManager->Destroy();
+
+	if (pD3DDevice) pD3DDevice->Release();
+	if (pImmediateContext) pImmediateContext->Release();
+	if (m_controlPoints.size() > 0)
+	{
+		for (int i = m_controlPoints.size() - 1; i >= 0; i--)
+		{
+			if (m_controlPoints.end()->second)
+			{
+				if (m_controlPoints.end()->second) delete m_controlPoints.end()->second;
+
+			}
+		}
+	}
+	if (m_FBXScene) m_FBXScene->Destroy();
+	if (m_skeleton.joints.size() > 0)
+	{
+		for (int i = m_skeleton.joints.size() - 1; i >= 0; i--)
+		{
+			if (m_skeleton.joints[i].node) m_skeleton.joints[i].node->Destroy();			
+		}
+	}
+	m_skeleton.joints.clear();
 
 	delete [] vertices;
 

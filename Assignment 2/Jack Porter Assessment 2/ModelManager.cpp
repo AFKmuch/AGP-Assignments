@@ -10,6 +10,36 @@ ModelManager::ModelManager()
 
 ModelManager::~ModelManager()
 {
+	if (m_Models.size() > 0)
+	{
+		for (int i = m_Models.size() - 1; i >= 0; i--)
+		{
+			if (m_Models.end()->second)
+			{
+				if (m_Models.end()->second->Model) delete m_Models.end()->second->Model;
+				if (m_Models.end()->second->VertexShader) m_Models.end()->second->VertexShader->Release();
+				if (m_Models.end()->second->PixelShader) m_Models.end()->second->PixelShader->Release();
+				if (m_Models.end()->second->InputLayout) m_Models.end()->second->InputLayout->Release();
+				if (m_Models.end()->second->ConstantBuffer) m_Models.end()->second->ConstantBuffer->Release();
+			}
+		}
+	}
+
+	if (m_Textures.size() > 0)
+	{
+
+		for (int i = m_Textures.size() - 1; i >= 0; i--)
+		{
+			if (m_Textures.end()->second)
+			{
+				if (m_Textures.end()->second->Texture) m_Textures.end()->second->Texture->Release();
+				if (m_Textures.end()->second->Sampler) m_Textures.end()->second->Sampler->Release();
+			}
+		}
+	}
+	if (m_pD3DDevice) m_pD3DDevice->Release();
+	if (m_pImmediateContext) m_pImmediateContext->Release();
+	if (s_instance) delete s_instance;
 }
 
 void ModelManager::SetUpDevice(ID3D11Device * device, ID3D11DeviceContext * deviceContext)

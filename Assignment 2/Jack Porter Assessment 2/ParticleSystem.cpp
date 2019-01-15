@@ -12,7 +12,7 @@ ParticleSystem::~ParticleSystem()
 	std::list<Particle*>::iterator it;
 	if (m_active.size() > 0)
 	{
-		for (int i = 0; i < m_active.size(); i++)
+		for (int i = m_active.size() - 1; i >= 0; i--)
 		{
 			it = m_active.begin();
 			std::advance(it, i);
@@ -23,7 +23,7 @@ ParticleSystem::~ParticleSystem()
 
 	if (m_active.size() > 0)
 	{
-		for (int i = 0; i < m_free.size(); i++)
+		for (int i = m_free.size() - 1; i >= 0; i--)
 		{
 			it = m_free.begin();
 			std::advance(it, i);
@@ -32,11 +32,19 @@ ParticleSystem::~ParticleSystem()
 		}
 	}
 
+	if (m_pAlphaBlendEnabled) m_pAlphaBlendEnabled->Release();
+	if (m_pAlphaBlendDisabled) m_pAlphaBlendDisabled->Release();
 	if (m_pConstantBuffer) m_pConstantBuffer->Release();
 	if (m_pInputLayout) m_pInputLayout->Release();
 	if (m_pVShader) m_pVShader->Release();
 	if (m_pPShader) m_pPShader->Release();
-
+	if (m_pVertexBuffer) m_pVertexBuffer->Release();
+	if (m_pImmediateContext) m_pImmediateContext->Release();
+	if (m_pD3DDevice) m_pD3DDevice->Release();
+	if (m_pDepthWriteParticle) m_pDepthWriteParticle->Release();
+	if (m_pDepthWriteSolid) m_pDepthWriteSolid->Release();
+	if (m_pRasterParticle) m_pRasterParticle->Release();
+	if (m_pRasterSolid) m_pRasterSolid->Release();
 }
 
 void ParticleSystem::SetUpParticleSystem(ID3D11Device* device, ID3D11DeviceContext* deviceContext)

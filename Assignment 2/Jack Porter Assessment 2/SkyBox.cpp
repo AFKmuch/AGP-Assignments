@@ -13,6 +13,20 @@ SkyBox::SkyBox(ID3D11Device* device, ID3D11DeviceContext* deviceContext, Camera*
 
 SkyBox::~SkyBox()
 {
+	if (m_pCamera) delete m_pCamera;
+	if (m_pSampler) m_pSampler->Release();
+	if (m_pTexture) m_pTexture->Release();
+	if (m_pConstantBuffer) m_pConstantBuffer->Release();
+	if (m_pInputLayout) m_pInputLayout->Release();
+	if (m_pVShader) m_pVShader->Release();
+	if (m_pPShader) m_pPShader->Release();
+	if (m_pVertexBuffer) m_pVertexBuffer->Release();
+	if (m_pImmediateContext) m_pImmediateContext->Release();
+	if (m_pD3DDevice) m_pD3DDevice->Release();
+	if (m_pDepthWriteSkyBox) m_pDepthWriteSkyBox->Release();
+	if (m_pDepthWriteSolid) m_pDepthWriteSolid->Release();
+	if (m_pRasterSkyBox) m_pRasterSkyBox->Release();
+	if (m_pRasterSolid) m_pRasterSolid->Release();
 }
 
 HRESULT SkyBox::SetUp(char* textureFileName)

@@ -264,6 +264,7 @@ void Text2D::RenderText(void)
 
 Text2D::~Text2D(void)
 {
+
 	if (m_pAlphaBlendDisabled) m_pAlphaBlendDisabled->Release();
 	if (m_pAlphaBlendEnabled) m_pAlphaBlendEnabled->Release();
 	if(pDepthDisabledStencilState) pDepthDisabledStencilState->Release();
@@ -274,5 +275,6 @@ Text2D::~Text2D(void)
 	if(pVShader) pVShader->Release();
 	if(pPShader) pPShader->Release();
 	if(pInputLayout) pInputLayout->Release();	
-
+	if (pD3DDevice) pD3DDevice->Release();
+	if (pImmediateContext) pImmediateContext->Release();
 }

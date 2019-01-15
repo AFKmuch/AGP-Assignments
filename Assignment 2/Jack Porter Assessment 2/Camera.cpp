@@ -20,6 +20,7 @@ Camera::Camera(float startX, float startY, float startZ, float startRot)
 
 Camera::~Camera()
 {
+	if (m_pPlayer) delete m_pPlayer;
 }
 
 void Camera::Rotate(float horizontal, float vertical)

@@ -1,1 +1,8 @@
 https://opengameart.org/content/sap-1-sapper-bot-mark-1
+http://help.autodesk.com/view/FBX/2019/ENU/
+https://www.gamedev.net/articles/programming/graphics/animating-characters-with-directx-r3632/
+https://www.gamedev.net/articles/programming/graphics/how-to-work-with-fbx-sdk-r3582/
+https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2019-2
+https://www.walkerb.net/blog/dx-4/
+https://www.mixamo.com/ "eve by J.Gonzales" and "Idle" animation
+

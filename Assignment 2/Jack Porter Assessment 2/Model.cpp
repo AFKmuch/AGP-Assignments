@@ -17,6 +17,7 @@ Model::Model(ID3D11Device* device, ID3D11DeviceContext* deviceContext, XMVECTOR 
 
 Model::~Model()
 {
+
 	if (m_pObject) delete m_pObject;
 	if (m_pTexture)	m_pTexture->Release();
 	if (m_pSampler) m_pSampler->Release();
@@ -24,6 +25,8 @@ Model::~Model()
 	if (m_pInputLayout) m_pInputLayout->Release();
 	if (m_pVShader) m_pVShader->Release();
 	if (m_pPShader) m_pPShader->Release();
+	if (m_pD3DDevice) m_pD3DDevice->Release();
+	if (m_pImmediateContext) m_pImmediateContext->Release();
 }
 
 HRESULT Model::LoadObjModel(char * filename)
